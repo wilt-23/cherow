@@ -195,7 +195,7 @@ export class Parser {
         this.token = this.scanToken(context);
 
         if (this.flags & Flags.OptionsOnToken && this.token !== Token.EndOfSource) {
-            this.handleTokens(this.token);
+            this.collectTokens(this.token);
         }
 
         return this.token;
@@ -204,7 +204,7 @@ export class Parser {
     /**
      * TODO! Refactor
      */
-    private handleTokens(token: Token) {
+    private collectTokens(token: Token) {
         const value = this.tokenValue;
         const start = this.startPos;
         const end = this.index;
@@ -238,10 +238,10 @@ export class Parser {
 
     private nextUnicodeChar() {
         this.advance();
-        const hi = this.source.charCodeAt(this.index);
+        const hi = this.nextChar();
         if (hi < 0xd800 || hi > 0xdbff) return hi;
         if (this.index === this.source.length) return hi;
-        const lo = this.source.charCodeAt(this.index);
+        const lo = this.nextChar();
 
         if (lo < 0xdc00 || lo > 0xdfff) return hi;
         return (hi & 0x3ff) << 10 | lo & 0x3ff | 0x10000;
@@ -271,7 +271,7 @@ export class Parser {
      * @param code Number
      */
     private consume(code: number): boolean {
-        if (this.source.charCodeAt(this.index) !== code) return false;
+        if (this.nextChar() !== code) return false;
         this.advance();
         return true;
     }
@@ -296,20 +296,25 @@ export class Parser {
             this.startColumn = this.column;
             this.startLine = this.line;
 
-            const first = this.source.charCodeAt(this.index);
+            const first = this.nextChar();
 
             switch (first) {
                 case Chars.CarriageReturn:
                 case Chars.LineFeed:
                     this.advanceNewline();
-                    if (first === Chars.CarriageReturn && this.hasNext() && this.nextChar() === Chars.LineFeed) {
+                    if (this.hasNext() &&
+                        first === Chars.CarriageReturn &&
+                        this.nextChar() === Chars.LineFeed) {
                         this.index++;
                     }
                     continue;
+
+                    // 0x7F > chars
                 case Chars.LineSeparator:
                 case Chars.ParagraphSeparator:
                     this.advanceNewline();
                     continue;
+
                 case Chars.Tab:
                 case Chars.VerticalTab:
                 case Chars.FormFeed:
@@ -358,7 +363,7 @@ export class Parser {
                         }
                     }
 
-                    // `<`, `<=`, `<<`, `<<=`, `</`
+                    // `<`, `<=`, `<<`, `<<=`, `</`,  <!--
                 case Chars.LessThan:
                     {
                         this.advance();
@@ -371,38 +376,37 @@ export class Parser {
                             this.consume(Chars.Hyphen)) {
                             this.skipSingleLineComment(4);
                             continue;
-                        } else {
+                        }
 
-                            switch (this.nextChar()) {
-                                case Chars.LessThan:
-                                    this.advance();
-                                    if (this.consume(Chars.EqualSign)) {
-                                        return Token.ShiftLeftAssign;
-                                    } else {
-                                        return Token.ShiftLeft;
-                                    }
-                                case Chars.EqualSign:
-                                    this.advance();
-                                    return Token.LessThanOrEqual;
+                        switch (this.nextChar()) {
+                            case Chars.LessThan:
+                                this.advance();
+                                if (this.consume(Chars.EqualSign)) {
+                                    return Token.ShiftLeftAssign;
+                                } else {
+                                    return Token.ShiftLeft;
+                                }
+                            case Chars.EqualSign:
+                                this.advance();
+                                return Token.LessThanOrEqual;
 
-                                case Chars.Slash:
-                                    {
-                                        if (!(this.flags & Flags.OptionsJSX)) break;
-                                        const index = this.index + 1;
+                            case Chars.Slash:
+                                {
+                                    if (!(this.flags & Flags.OptionsJSX)) break;
+                                    const index = this.index + 1;
 
-                                        // Check that it's not a comment start.
-                                        if (index < this.source.length) {
-                                            const next = this.source.charCodeAt(index);
-                                            if (next === Chars.Asterisk || next === Chars.Slash) break;
-                                        }
-
-                                        this.advance();
-                                        return Token.JSXClose;
+                                    // Check that it's not a comment start.
+                                    if (index < this.source.length) {
+                                        const next = this.source.charCodeAt(index);
+                                        if (next === Chars.Asterisk || next === Chars.Slash) break;
                                     }
 
-                                default:
-                                    return Token.LessThan;
-                            }
+                                    this.advance();
+                                    return Token.JSXClose;
+                                }
+
+                            default:
+                                return Token.LessThan;
                         }
                     }
 
@@ -411,13 +415,17 @@ export class Parser {
                     {
                         this.advance(); // skip '-'
 
-                        if (this.consume(Chars.Hyphen)) {
+                        const next = this.nextChar();
+
+                        if (next === Chars.Hyphen) {
+                            this.advance();
                             if (this.consume(Chars.GreaterThan)) {
                                 if (!(context & Context.Module) || this.flags & Flags.LineTerminator) this.skipSingleLineComment(3);
                                 continue;
                             }
                             return Token.Decrement;
-                        } else if (this.consume(Chars.EqualSign)) {
+                        } else if (next === Chars.EqualSign) {
+                            this.advance();
                             return Token.SubtractAssign;
                         } else {
                             return Token.Subtract;
@@ -427,7 +435,8 @@ export class Parser {
                     // `#`
                 case Chars.Hash:
                     {
-                        if (this.index === 0 && this.source.charCodeAt(this.index + 1) === Chars.Exclamation) {
+                        if (this.index === 0 &&
+                            this.source.charCodeAt(this.index + 1) === Chars.Exclamation) {
                             this.index += 2;
                             this.column += 2;
                             this.skipShebangComment();
@@ -647,7 +656,7 @@ export class Parser {
 
                         if (!this.hasNext()) return Token.BitwiseOr;
 
-                        const next = this.source.charCodeAt(this.index);
+                        const next = this.nextChar();
 
                         if (next === Chars.VerticalBar) {
                             this.advance();
@@ -1086,7 +1095,7 @@ export class Parser {
 
     private skipDigits() {
         scan: while (this.hasNext()) {
-            switch (this.source.charCodeAt(this.index)) {
+            switch (this.nextChar()) {
                 case Chars.Zero:
                 case Chars.One:
                 case Chars.Two:
@@ -1528,7 +1537,7 @@ export class Parser {
                 const firstCharPosition = this.index;
                 scan:
                     while (this.hasNext()) {
-                        const ch = this.source.charCodeAt(this.index);
+                        const ch = this.nextChar();
                         switch (ch) {
                             case Chars.Hyphen:
                                 this.advance();
@@ -3444,7 +3453,8 @@ export class Parser {
         // Invalid: `"use strict"; const const = 1;`
         if (hasMask(this.token, Token.Reserved)) this.error(Errors.UnexpectedStrictReserved);
 
-        this.addVarOrBlock(context, name);
+        if (!(context & Context.ForStatement)) this.addVarOrBlock(context, name);
+
         const pos = this.startNode();
 
         this.nextToken(context);
@@ -4341,7 +4351,7 @@ export class Parser {
                 // plain identifier
                 if (this.flags & Flags.LineTerminator) return expr;
                 // Valid: 'async => 1'
-                if (this.token === Token.Arrow) return this.parseArrowExpression(context &= ~ Context.Parenthesis, pos, [expr]);
+                if (this.token === Token.Arrow) return this.parseArrowExpression(context &= ~Context.Parenthesis, pos, [expr]);
                 // Invalid: 'async => {}'
                 // Valid: 'async foo => {}'
                 if (this.isIdentifier(context, this.token)) {
@@ -4378,7 +4388,7 @@ export class Parser {
                 // fixes let let split across two lines
                 if (this.flags & Flags.LineTerminator) this.error(Errors.InvalidStrictLexical);
             default:
-                return this.parseIdentifierOrArrow(context &= ~ Context.Parenthesis, pos);
+                return this.parseIdentifierOrArrow(context &= ~Context.Parenthesis, pos);
         }
     }
 

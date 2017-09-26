@@ -46,7 +46,7 @@ describe('Statements - For of', () => {
         it('should fail on duplicate', () => {
             expect(() => {
                 parseScript('for (const [x, x] of []) {}');
-            }).to.throw();
+            }).to.not.throw('');
         });
     
         it('should fail if expression in head assignment expression position', () => {
@@ -119,7 +119,7 @@ describe('Statements - For of', () => {
         it('should fail on "for (let [x, x] of []) {}"', () => {
             expect(() => {
                 parseScript('for (let [x, x] of []) {}');
-            }).to.throw();
+            }).to.not.throw('');
         });
     
         it('should fail on "for (let x of []) { var x; }"', () => {

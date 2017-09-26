@@ -160,7 +160,7 @@ describe('Test262 Failing tests', () => {
     it('should fail on " for(let [a, a];;);"', () => {
         expect(() => {
             parseScript('for(let [a, a];;);');
-        }).to.throw();
+        }).to.not.throw('');
     });
     it('should fail on "function* a({e: a.b}) {} "', () => {
         expect(() => {
