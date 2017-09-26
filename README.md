@@ -7,6 +7,8 @@ It strictly follows the ECMAScript® 2018 Language Specification and should pars
 
 It's safe to use in production.
 
+A demo can be found [here](https://cherow.github.io/cherow/)
+
 ## Features 
 
 - Full support for ECMAScript® 2018 [(ECMA-262 8th Edition)](http://www.ecma-international.org/publications/standards/Ecma-262.htm)
