@@ -7,7 +7,7 @@ It strictly follows the ECMAScript® 2018 Language Specification and should pars
 
 It's safe to use in production.
 
-A demo can be found [here](https://cherow.github.io/cherow/)
+A online demo can be found [here](https://cherow.github.io/cherow/)
 
 ## Features 
 
@@ -16,7 +16,7 @@ A demo can be found [here](https://cherow.github.io/cherow/)
 - Support for JSX, a syntax extension for React
 - Skips shebang comment nodes by default
 - Optional tracking of syntax node location (index-based and line-column)
-- 4650 unit tests with full code coverage
+- 5100 unit tests with full code coverage
 
 ## ESNext features
 
