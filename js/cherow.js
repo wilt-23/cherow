@@ -752,14 +752,14 @@ Parser.prototype.restoreState = function restoreState (state) {
 Parser.prototype.nextToken = function nextToken (context) {
     this.token = this.scanToken(context);
     if (this.flags & 16777216 /* OptionsOnToken */ && this.token !== 0 /* EndOfSource */) {
-        this.handleTokens(this.token);
+        this.collectTokens(this.token);
     }
     return this.token;
 };
 /**
  * TODO! Refactor
  */
-Parser.prototype.handleTokens = function handleTokens (token) {
+Parser.prototype.collectTokens = function collectTokens (token) {
     var value = this.tokenValue;
     var start = this.startPos;
     var end = this.index;
@@ -788,12 +788,12 @@ Parser.prototype.nextChar = function nextChar () {
 };
 Parser.prototype.nextUnicodeChar = function nextUnicodeChar () {
     this.advance();
-    var hi = this.source.charCodeAt(this.index);
+    var hi = this.nextChar();
     if (hi < 0xd800 || hi > 0xdbff)
         { return hi; }
     if (this.index === this.source.length)
         { return hi; }
-    var lo = this.source.charCodeAt(this.index);
+    var lo = this.nextChar();
     if (lo < 0xdc00 || lo > 0xdfff)
         { return hi; }
     return (hi & 0x3ff) << 10 | lo & 0x3ff | 0x10000;
@@ -820,7 +820,7 @@ Parser.prototype.advanceNewline = function advanceNewline () {
  * @param code Number
  */
 Parser.prototype.consume = function consume (code) {
-    if (this.source.charCodeAt(this.index) !== code)
+    if (this.nextChar() !== code)
         { return false; }
     this.advance();
     return true;
@@ -842,15 +842,18 @@ Parser.prototype.scanToken = function scanToken (context) {
         this$1.startPos = this$1.index;
         this$1.startColumn = this$1.column;
         this$1.startLine = this$1.line;
-        var first = this$1.source.charCodeAt(this$1.index);
+        var first = this$1.nextChar();
         switch (first) {
             case 13 /* CarriageReturn */:
             case 10 /* LineFeed */:
                 this$1.advanceNewline();
-                if (first === 13 /* CarriageReturn */ && this$1.hasNext() && this$1.nextChar() === 10 /* LineFeed */) {
+                if (this$1.hasNext() &&
+                    first === 13 /* CarriageReturn */ &&
+                    this$1.nextChar() === 10 /* LineFeed */) {
                     this$1.index++;
                 }
                 continue;
+            // 0x7F > chars
             case 8232 /* LineSeparator */:
             case 8233 /* ParagraphSeparator */:
                 this$1.advanceNewline();
@@ -900,7 +903,7 @@ Parser.prototype.scanToken = function scanToken (context) {
                             return 2613 /* Divide */;
                     }
                 }
-            // `<`, `<=`, `<<`, `<<=`, `</`
+            // `<`, `<=`, `<<`, `<<=`, `</`,  <!--
             case 60 /* LessThan */:
                 {
                     this$1.advance();
@@ -913,43 +916,43 @@ Parser.prototype.scanToken = function scanToken (context) {
                         this$1.skipSingleLineComment(4);
                         continue;
                     }
-                    else {
-                        switch (this$1.nextChar()) {
-                            case 60 /* LessThan */:
-                                this$1.advance();
-                                if (this$1.consume(61 /* EqualSign */)) {
-                                    return 30 /* ShiftLeftAssign */;
-                                }
-                                else {
-                                    return 2113 /* ShiftLeft */;
-                                }
-                            case 61 /* EqualSign */:
-                                this$1.advance();
-                                return 1853 /* LessThanOrEqual */;
-                            case 47 /* Slash */:
-                                {
-                                    if (!(this$1.flags & 1048576 /* OptionsJSX */))
+                    switch (this$1.nextChar()) {
+                        case 60 /* LessThan */:
+                            this$1.advance();
+                            if (this$1.consume(61 /* EqualSign */)) {
+                                return 30 /* ShiftLeftAssign */;
+                            }
+                            else {
+                                return 2113 /* ShiftLeft */;
+                            }
+                        case 61 /* EqualSign */:
+                            this$1.advance();
+                            return 1853 /* LessThanOrEqual */;
+                        case 47 /* Slash */:
+                            {
+                                if (!(this$1.flags & 1048576 /* OptionsJSX */))
+                                    { break; }
+                                var index = this$1.index + 1;
+                                // Check that it's not a comment start.
+                                if (index < this$1.source.length) {
+                                    var next = this$1.source.charCodeAt(index);
+                                    if (next === 42 /* Asterisk */ || next === 47 /* Slash */)
                                         { break; }
-                                    var index = this$1.index + 1;
-                                    // Check that it's not a comment start.
-                                    if (index < this$1.source.length) {
-                                        var next = this$1.source.charCodeAt(index);
-                                        if (next === 42 /* Asterisk */ || next === 47 /* Slash */)
-                                            { break; }
-                                    }
-                                    this$1.advance();
-                                    return 25 /* JSXClose */;
                                 }
-                            default:
-                                return 1855 /* LessThan */;
-                        }
+                                this$1.advance();
+                                return 25 /* JSXClose */;
+                            }
+                        default:
+                            return 1855 /* LessThan */;
                     }
                 }
             // -, --, -->, -=,
             case 45 /* Hyphen */:
                 {
                     this$1.advance(); // skip '-'
-                    if (this$1.consume(45 /* Hyphen */)) {
+                    var next$1 = this$1.nextChar();
+                    if (next$1 === 45 /* Hyphen */) {
+                        this$1.advance();
                         if (this$1.consume(62 /* GreaterThan */)) {
                             if (!(context & 1 /* Module */) || this$1.flags & 1 /* LineTerminator */)
                                 { this$1.skipSingleLineComment(3); }
@@ -957,7 +960,8 @@ Parser.prototype.scanToken = function scanToken (context) {
                         }
                         return 28 /* Decrement */;
                     }
-                    else if (this$1.consume(61 /* EqualSign */)) {
+                    else if (next$1 === 61 /* EqualSign */) {
+                        this$1.advance();
                         return 35 /* SubtractAssign */;
                     }
                     else {
@@ -967,7 +971,8 @@ Parser.prototype.scanToken = function scanToken (context) {
             // `#`
             case 35 /* Hash */:
                 {
-                    if (this$1.index === 0 && this$1.source.charCodeAt(this$1.index + 1) === 33 /* Exclamation */) {
+                    if (this$1.index === 0 &&
+                        this$1.source.charCodeAt(this$1.index + 1) === 33 /* Exclamation */) {
                         this$1.index += 2;
                         this$1.column += 2;
                         this$1.skipShebangComment();
@@ -1032,12 +1037,12 @@ Parser.prototype.scanToken = function scanToken (context) {
                     this$1.advance();
                     if (!this$1.hasNext())
                         { return 1348 /* BitwiseAnd */; }
-                    var next$1 = this$1.nextChar();
-                    if (next$1 === 38 /* Ampersand */) {
+                    var next$2 = this$1.nextChar();
+                    if (next$2 === 38 /* Ampersand */) {
                         this$1.advance();
                         return 567 /* LogicalAnd */;
                     }
-                    if (next$1 === 61 /* EqualSign */) {
+                    if (next$2 === 61 /* EqualSign */) {
                         this$1.advance();
                         return 41 /* BitwiseAndAssign */;
                     }
@@ -1069,12 +1074,12 @@ Parser.prototype.scanToken = function scanToken (context) {
                     this$1.advance();
                     if (!this$1.hasNext())
                         { return 2611 /* Multiply */; }
-                    var next$2 = this$1.nextChar();
-                    if (next$2 === 61 /* EqualSign */) {
+                    var next$3 = this$1.nextChar();
+                    if (next$3 === 61 /* EqualSign */) {
                         this$1.advance();
                         return 36 /* MultiplyAssign */;
                     }
-                    if (next$2 !== 42 /* Asterisk */)
+                    if (next$3 !== 42 /* Asterisk */)
                         { return 2611 /* Multiply */; }
                     this$1.advance();
                     if (!this$1.consume(61 /* EqualSign */))
@@ -1087,12 +1092,12 @@ Parser.prototype.scanToken = function scanToken (context) {
                     this$1.advance();
                     if (!this$1.hasNext())
                         { return 2351 /* Add */; }
-                    var next$3 = this$1.nextChar();
-                    if (next$3 === 43 /* Plus */) {
+                    var next$4 = this$1.nextChar();
+                    if (next$4 === 43 /* Plus */) {
                         this$1.advance();
                         return 27 /* Increment */;
                     }
-                    if (next$3 === 61 /* EqualSign */) {
+                    if (next$4 === 61 /* EqualSign */) {
                         this$1.advance();
                         return 34 /* AddAssign */;
                     }
@@ -1104,8 +1109,8 @@ Parser.prototype.scanToken = function scanToken (context) {
                     this$1.advance();
                     if (!this$1.hasNext())
                         { return 29 /* Assign */; }
-                    var next$4 = this$1.nextChar();
-                    if (next$4 === 61 /* EqualSign */) {
+                    var next$5 = this$1.nextChar();
+                    if (next$5 === 61 /* EqualSign */) {
                         this$1.advance();
                         if (this$1.consume(61 /* EqualSign */)) {
                             return 1593 /* StrictEqual */;
@@ -1114,7 +1119,7 @@ Parser.prototype.scanToken = function scanToken (context) {
                             return 1595 /* LooseEqual */;
                         }
                     }
-                    else if (next$4 === 62 /* GreaterThan */) {
+                    else if (next$5 === 62 /* GreaterThan */) {
                         this$1.advance();
                         return 10 /* Arrow */;
                     }
@@ -1129,17 +1134,17 @@ Parser.prototype.scanToken = function scanToken (context) {
                         { return 1856 /* GreaterThan */; }
                     if (!this$1.hasNext())
                         { return 1856 /* GreaterThan */; }
-                    var next$5 = this$1.nextChar();
-                    if (next$5 === 61 /* EqualSign */) {
+                    var next$6 = this$1.nextChar();
+                    if (next$6 === 61 /* EqualSign */) {
                         this$1.advance();
                         return 1854 /* GreaterThanOrEqual */;
                     }
-                    if (next$5 !== 62 /* GreaterThan */)
+                    if (next$6 !== 62 /* GreaterThan */)
                         { return 1856 /* GreaterThan */; }
                     this$1.advance();
                     if (this$1.hasNext()) {
-                        next$5 = this$1.nextChar();
-                        if (next$5 === 62 /* GreaterThan */) {
+                        next$6 = this$1.nextChar();
+                        if (next$6 === 62 /* GreaterThan */) {
                             this$1.advance();
                             if (this$1.consume(61 /* EqualSign */)) {
                                 return 32 /* LogicalShiftRightAssign */;
@@ -1148,7 +1153,7 @@ Parser.prototype.scanToken = function scanToken (context) {
                                 return 2115 /* LogicalShiftRight */;
                             }
                         }
-                        else if (next$5 === 61 /* EqualSign */) {
+                        else if (next$6 === 61 /* EqualSign */) {
                             this$1.advance();
                             return 31 /* ShiftRightAssign */;
                         }
@@ -1161,12 +1166,12 @@ Parser.prototype.scanToken = function scanToken (context) {
                     this$1.advance();
                     if (!this$1.hasNext())
                         { return 837 /* BitwiseOr */; }
-                    var next$6 = this$1.source.charCodeAt(this$1.index);
-                    if (next$6 === 124 /* VerticalBar */) {
+                    var next$7 = this$1.nextChar();
+                    if (next$7 === 124 /* VerticalBar */) {
                         this$1.advance();
                         return 312 /* LogicalOr */;
                     }
-                    else if (next$6 === 61 /* EqualSign */) {
+                    else if (next$7 === 61 /* EqualSign */) {
                         this$1.advance();
                         return 40 /* BitwiseOrAssign */;
                     }
@@ -1177,8 +1182,8 @@ Parser.prototype.scanToken = function scanToken (context) {
                 {
                     var index$1 = this$1.index + 1;
                     if (index$1 < this$1.source.length) {
-                        var next$7 = this$1.source.charCodeAt(index$1);
-                        if (next$7 === 46 /* Period */) {
+                        var next$8 = this$1.source.charCodeAt(index$1);
+                        if (next$8 === 46 /* Period */) {
                             index$1++;
                             if (index$1 < this$1.source.length &&
                                 this$1.source.charCodeAt(index$1) === 46 /* Period */) {
@@ -1187,7 +1192,7 @@ Parser.prototype.scanToken = function scanToken (context) {
                                 return 14 /* Ellipsis */;
                             }
                         }
-                        else if (next$7 >= 48 /* Zero */ && next$7 <= 57 /* Nine */) {
+                        else if (next$8 >= 48 /* Zero */ && next$8 <= 57 /* Nine */) {
                             // Rewind the initial token.
                             this$1.scanNumber(context, first);
                             return 2 /* NumericLiteral */;
@@ -1565,7 +1570,7 @@ Parser.prototype.skipDigits = function skipDigits () {
         var this$1 = this;
 
     scan: while (this.hasNext()) {
-        switch (this$1.source.charCodeAt(this$1.index)) {
+        switch (this$1.nextChar()) {
             case 48 /* Zero */:
             case 49 /* One */:
             case 50 /* Two */:
@@ -1963,7 +1968,7 @@ Parser.prototype.scanJSXIdentifier = function scanJSXIdentifier (context) {
         case 65537 /* Identifier */:
             var firstCharPosition = this.index;
             scan: while (this.hasNext()) {
-                var ch = this$1.source.charCodeAt(this$1.index);
+                var ch = this$1.nextChar();
                 switch (ch) {
                     case 45 /* Hyphen */:
                         this$1.advance();
@@ -3652,7 +3657,8 @@ Parser.prototype.parseBindingIdentifier = function parseBindingIdentifier (conte
     // Invalid: `"use strict"; const const = 1;`
     if (hasMask(this.token, 8192 /* Reserved */))
         { this.error(108 /* UnexpectedStrictReserved */); }
-    this.addVarOrBlock(context, name);
+    if (!(context & 16384 /* ForStatement */))
+        { this.addVarOrBlock(context, name); }
     var pos = this.startNode();
     this.nextToken(context);
     return this.finishNode(pos, {
