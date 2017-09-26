@@ -4799,20 +4799,22 @@ export class Parser {
                 break;
 
             default:
+
+                // Invalid: `class A extends yield B { }`
+                // Invalid: '({[x]})'
+                // Invalid: '({await})'
+                if (computed ||
+                    !this.isIdentifier(context, token) ||
+                    token === Token.AwaitKeyword) this.error(Errors.UnexpectedToken, tokenDesc(token));
+
                 // Invalid: `"use strict"; for ({ eval } of [{}]) ;`
                 if (context & Context.Strict && this.isEvalOrArguments(this.tokenValue)) this.error(Errors.UnexpectedReservedWord);
-                // Invalid: `class A extends yield B { }`
-                if (!this.isIdentifier(context, token)) this.error(Errors.Unexpected);
 
                 // Invalid: 'function*g() { ({yield}); }'
                 if (context & Context.Yield &&
                     this.flags & Flags.InFunctionBody &&
                     context & Context.Parenthesis &&
                     token === Token.YieldKeyword) this.error(Errors.DisallowedInContext, tokenValue);
-
-                // Invalid: '({[x]})'
-                // Invalid: '({await})'
-                if (computed || token === Token.AwaitKeyword) this.error(Errors.UnexpectedToken, tokenDesc(token));
 
                 shorthand = true;
                 value = key;

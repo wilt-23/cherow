@@ -59,12 +59,23 @@ describe('Import', () => {
           }).to.throw();
       });
   
-      it.skip('should fail on "import {b as,} from "a"', () => {
+      it('should fail on "import {b as,} from "a"', () => {
           expect(() => {
               parseModule('import {b as,} from "a"');
           }).to.throw();
       });
-  
+
+      it('should fail on invalid import specifier', () => {
+        expect(() => {
+            parseModule('import foo, from "bar";');
+        }).to.throw();
+    });
+      
+      it('should fail on import missing comma', () => {
+        expect(() => {
+            parseModule('import foo  { bar } from "bar";');
+        }).to.throw();
+    });
       it('should fail on "import / as a from  "a""', () => {
           expect(() => {
               parseModule('import / as a from "a"');
@@ -128,7 +139,39 @@ describe('Import', () => {
               parseModule('import { foo, bar }');
           }).to.throw();
       });
-      it("should fail on \"import { for } from \"iteration\"\"", () => {
+
+      it('should fail on invalid import default', () => {
+        expect(() => {
+            parseModule('import default from "foo"');
+        }).to.throw();
+    });
+
+    it('should fail on invalid import named after namespace', () => {
+        expect(() => {
+            parseModule('import * as foo, {bar} from "foo";');
+        }).to.throw();
+    });
+
+    it('should fail on invalid import named as missing', () => {
+        expect(() => {
+            parseModule('import {default as foo}');
+        }).to.throw();
+    });
+
+    it('should fail on invalid import namespace after named', () => {
+        expect(() => {
+            parseModule('import {bar}, * as foo from "foo";');
+        }).to.throw();
+    });
+
+    it('should fail on invalid import specifiers', () => {
+        expect(() => {
+            parseModule('import foo, from "bar";');
+        }).to.throw();
+    });
+
+
+    it("should fail on \"import { for } from \"iteration\"\"", () => {
           expect(() => {
               parseModule("import { for } from \"iteration\"");
           }).to.throw();
@@ -215,6 +258,112 @@ describe('Import', () => {
               parseModule('import {a \\u0061s b} from "./escaped-as-import-specifier.js";');
           }).to.throw();
       });
+      
+      it('should import named specifiers comma', () => {
+        expect(parseModule('import {foo,} from "bar"', {
+            ranges: true,
+            raw: true,
+            locations: true
+        })).to.eql({
+            "type": "Program",
+            "body": [
+                {
+                    "type": "ImportDeclaration",
+                    "specifiers": [
+                        {
+                            "type": "ImportSpecifier",
+                            "local": {
+                                "type": "Identifier",
+                                "name": "foo",
+                                "start": 8,
+                                "end": 11,
+                                "loc": {
+                                    "start": {
+                                        "line": 1,
+                                        "column": 8
+                                    },
+                                    "end": {
+                                        "line": 1,
+                                        "column": 11
+                                    }
+                                }
+                            },
+                            "imported": {
+                                "type": "Identifier",
+                                "name": "foo",
+                                "start": 8,
+                                "end": 11,
+                                "loc": {
+                                    "start": {
+                                        "line": 1,
+                                        "column": 8
+                                    },
+                                    "end": {
+                                        "line": 1,
+                                        "column": 11
+                                    }
+                                }
+                            },
+                            "start": 8,
+                            "end": 11,
+                            "loc": {
+                                "start": {
+                                    "line": 1,
+                                    "column": 8
+                                },
+                                "end": {
+                                    "line": 1,
+                                    "column": 11
+                                }
+                            }
+                        }
+                    ],
+                    "source": {
+                        "type": "Literal",
+                        "value": "bar",
+                        "start": 19,
+                        "end": 24,
+                        "loc": {
+                            "start": {
+                                "line": 1,
+                                "column": 19
+                            },
+                            "end": {
+                                "line": 1,
+                                "column": 24
+                            }
+                        },
+                        "raw": "\"bar\""
+                    },
+                    "start": 0,
+                    "end": 24,
+                    "loc": {
+                        "start": {
+                            "line": 1,
+                            "column": 0
+                        },
+                        "end": {
+                            "line": 1,
+                            "column": 24
+                        }
+                    }
+                }
+            ],
+            "sourceType": "module",
+            "start": 0,
+            "end": 24,
+            "loc": {
+                "start": {
+                    "line": 1,
+                    "column": 0
+                },
+                "end": {
+                    "line": 1,
+                    "column": 24
+                }
+            }
+        });
+    });
   
       it('should import with trailing comma', () => {
           expect(parseModule('import { x , } from "/eval-gtbndng-indirect-trlng-comma_FIXTURE.js";', {
@@ -624,7 +773,7 @@ describe('Import', () => {
           });
       });
   
-      it("should parse \"import {} from \"foo\";\"", () => {
+      it("should import named empty", () => {
           expect(parseModule('import {} from "foo";', {
               ranges: true,
               raw: true,
@@ -1372,6 +1521,154 @@ describe('Import', () => {
               "sourceType": "module"
           });
       });
+
+      it('should import namespace specifier', () => {
+        expect(parseModule('import * as foo from "foo";', {
+            raw: true,
+            locations: true,
+            ranges: true
+        })).to.eql({
+            "type": "Program",
+            "start": 0,
+            "end": 27,
+            "loc": {
+              "start": {
+                "line": 1,
+                "column": 0
+              },
+              "end": {
+                "line": 1,
+                "column": 27
+              }
+            },
+            "body": [
+              {
+                "type": "ImportDeclaration",
+                "start": 0,
+                "end": 27,
+                "loc": {
+                  "start": {
+                    "line": 1,
+                    "column": 0
+                  },
+                  "end": {
+                    "line": 1,
+                    "column": 27
+                  }
+                },
+                "specifiers": [
+                  {
+                    "type": "ImportNamespaceSpecifier",
+                    "start": 7,
+                    "end": 15,
+                    "loc": {
+                      "start": {
+                        "line": 1,
+                        "column": 7
+                      },
+                      "end": {
+                        "line": 1,
+                        "column": 15
+                      }
+                    },
+                    "local": {
+                      "type": "Identifier",
+                      "start": 12,
+                      "end": 15,
+                      "loc": {
+                        "start": {
+                          "line": 1,
+                          "column": 12
+                        },
+                        "end": {
+                          "line": 1,
+                          "column": 15
+                        }
+                      },
+                      "name": "foo"
+                    }
+                  }
+                ],
+                "source": {
+                  "type": "Literal",
+                  "start": 21,
+                  "end": 26,
+                  "loc": {
+                    "start": {
+                      "line": 1,
+                      "column": 21
+                    },
+                    "end": {
+                      "line": 1,
+                      "column": 26
+                    }
+                  },
+                  "value": "foo",
+                  "raw": "\"foo\""
+                }
+              }
+            ],
+            "sourceType": "module"
+          });
+    });
+
+      it('should import module', () => {
+        expect(parseModule('import "foo";', {
+            raw: true,
+            locations: true,
+            ranges: true
+        })).to.eql({
+            "type": "Program",
+            "start": 0,
+            "end": 13,
+            "loc": {
+              "start": {
+                "line": 1,
+                "column": 0
+              },
+              "end": {
+                "line": 1,
+                "column": 13
+              }
+            },
+            "body": [
+              {
+                "type": "ImportDeclaration",
+                "start": 0,
+                "end": 13,
+                "loc": {
+                  "start": {
+                    "line": 1,
+                    "column": 0
+                  },
+                  "end": {
+                    "line": 1,
+                    "column": 13
+                  }
+                },
+                "specifiers": [],
+                "source": {
+                  "type": "Literal",
+                  "start": 7,
+                  "end": 12,
+                  "loc": {
+                    "start": {
+                      "line": 1,
+                      "column": 7
+                    },
+                    "end": {
+                      "line": 1,
+                      "column": 12
+                    }
+                  },
+                  "value": "foo",
+                  "raw": "\"foo\""
+                }
+              }
+            ],
+            "sourceType": "module"
+          });
+    });
   
       it('should import a, {b,c,} from "d"', () => {
           expect(parseModule('import a, {b,c,} from "d"', {

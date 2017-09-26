@@ -1546,6 +1546,178 @@ describe('Destructuring - Destructuring', () => {
               });
         });
 
+        it('should parse "({ test = 1 } = {})"', () => {
+            expect(parseScript('({ test = 1 } = {})', {
+                ranges: true,
+                locations: true,
+                raw: true
+            })).to.eql({
+                "type": "Program",
+                "start": 0,
+                "end": 19,
+                "loc": {
+                  "start": {
+                    "line": 1,
+                    "column": 0
+                  },
+                  "end": {
+                    "line": 1,
+                    "column": 19
+                  }
+                },
+                "body": [
+                  {
+                    "type": "ExpressionStatement",
+                    "start": 0,
+                    "end": 19,
+                    "loc": {
+                      "start": {
+                        "line": 1,
+                        "column": 0
+                      },
+                      "end": {
+                        "line": 1,
+                        "column": 19
+                      }
+                    },
+                    "expression": {
+                      "type": "AssignmentExpression",
+                      "start": 1,
+                      "end": 18,
+                      "loc": {
+                        "start": {
+                          "line": 1,
+                          "column": 1
+                        },
+                        "end": {
+                          "line": 1,
+                          "column": 18
+                        }
+                      },
+                      "operator": "=",
+                      "left": {
+                        "type": "ObjectPattern",
+                        "start": 1,
+                        "end": 13,
+                        "loc": {
+                          "start": {
+                            "line": 1,
+                            "column": 1
+                          },
+                          "end": {
+                            "line": 1,
+                            "column": 13
+                          }
+                        },
+                        "properties": [
+                          {
+                            "type": "Property",
+                            "start": 3,
+                            "end": 11,
+                            "loc": {
+                              "start": {
+                                "line": 1,
+                                "column": 3
+                              },
+                              "end": {
+                                "line": 1,
+                                "column": 11
+                              }
+                            },
+                            "method": false,
+                            "shorthand": true,
+                            "computed": false,
+                            "key": {
+                              "type": "Identifier",
+                              "start": 3,
+                              "end": 7,
+                              "loc": {
+                                "start": {
+                                  "line": 1,
+                                  "column": 3
+                                },
+                                "end": {
+                                  "line": 1,
+                                  "column": 7
+                                }
+                              },
+                              "name": "test"
+                            },
+                            "kind": "init",
+                            "value": {
+                              "type": "AssignmentPattern",
+                              "start": 3,
+                              "end": 11,
+                              "loc": {
+                                "start": {
+                                  "line": 1,
+                                  "column": 3
+                                },
+                                "end": {
+                                  "line": 1,
+                                  "column": 11
+                                }
+                              },
+                              "left": {
+                                "type": "Identifier",
+                                "start": 3,
+                                "end": 7,
+                                "loc": {
+                                  "start": {
+                                    "line": 1,
+                                    "column": 3
+                                  },
+                                  "end": {
+                                    "line": 1,
+                                    "column": 7
+                                  }
+                                },
+                                "name": "test"
+                              },
+                              "right": {
+                                "type": "Literal",
+                                "start": 10,
+                                "end": 11,
+                                "loc": {
+                                  "start": {
+                                    "line": 1,
+                                    "column": 10
+                                  },
+                                  "end": {
+                                    "line": 1,
+                                    "column": 11
+                                  }
+                                },
+                                "value": 1,
+                                "raw": "1"
+                              }
+                            }
+                          }
+                        ]
+                      },
+                      "right": {
+                        "type": "ObjectExpression",
+                        "start": 16,
+                        "end": 18,
+                        "loc": {
+                          "start": {
+                            "line": 1,
+                            "column": 16
+                          },
+                          "end": {
+                            "line": 1,
+                            "column": 18
+                          }
+                        },
+                        "properties": []
+                      }
+                    }
+                  }
+                ],
+                "sourceType": "script"
+              });
+        });
+
         it('should parse "({set = {}}) => set;"', () => {
             expect(parseScript('({set = {}}) => set;', {
                 ranges: true,
