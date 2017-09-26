@@ -3,11 +3,11 @@
 
 Cherow is a very fast, standard-compliant [ECMAScript](http://www.ecma-international.org/publications/standards/Ecma-262.htm) parser written in ECMAScript. 
 
-It strictly follows the ECMAScript® 2018 Language Specification and should parse acc. these specifications
+It strictly follows the ECMAScript® 2018 Language Specification and should parse according these specifications
 
 It's safe to use in production.
 
-A online demo can be found [here](https://cherow.github.io/cherow/)
+A online demo can be found [here](https://cherow.github.io/cherow/).
 
 ## Features 
 
@@ -36,19 +36,19 @@ This need to be enabled with the `v8` option
 
 ## Options
 
-* `next` - Enables `ECMAScript Next` support and let you use proposals at `stage 3` or higher such as `Dynamic Import`.
+* `next` - Enables `ECMAScript Next` support and let you use proposals at `stage 3` or higher such as `Dynamic Import`
 * `raw` - Enables the raw property on literal nodes (*Esprima and Acorn feature*)
-* `comments` - Enables option to collect comments. Optional; Either array or function. Works like [Acorn](https://github.com/ternjs/acorn) onComment.
+* `comments` - Enables option to collect comments. Optional; Either array or function. Works like [Acorn](https://github.com/ternjs/acorn) onComment
 * `tokens` - If enabled each found token will be returned as either an function or an array (*work in progres*)
-* `ranges` - Enables the start and characters offsets on the AST node.
+* `ranges` - Enables the start and characters offsets on the AST node
 * `locations` - Enables location tracking
 * `jsx` - Enables JSX
 
 ## API
 
-Cherow can be used to perform syntactic analysis of Javascript program. 
+Cherow can be used to perform syntactic analysis of JavaScript program. 
 
-**Note!** there does not exist an `sourceType: module` option for parsing module code. Acc. the Ecmascript specs you should use either `parseScript` or `parseModule`.
+**Note!** there does not exist an `sourceType: module` option for parsing module code. According the ECMAScript specs you should use either `parseScript` or `parseModule`.
 
 ```js
 
@@ -76,7 +76,7 @@ skipped by default, and can't be collected.
 
 ### Collecting comments
 
-Collecting comments works just the same way as for Acorn
+Collecting comments works just the same way as for Acorn.
 ```js
 
 // Function
@@ -93,7 +93,7 @@ cherow.parseScript('// foo',
     { 
         comments: commentArray 
     }
-    );
+);
 
 ```
 
@@ -112,14 +112,14 @@ dependency in other libraries. Poor performance will slow down the main library.
 
 Cherow has been developed from scratch with only one goal - performance.
 
-You can find the benchmarks [here](BENCHMARK.md)
+You can find the benchmarks [here](BENCHMARK.md).
 
 ## ESTree
 
 Cherow outputs a sensible syntax tree format as standardized by [ESTree project](https://github.com/estree/estree), and does
 not add any "extra" properties to any of its nodes.
 
-However. There is a small difference from other parsers because Cherow outputs a `await` property on the `ForStatement` node.
+However there is a small difference from other parsers because Cherow outputs a `await` property on the `ForStatement` node.
 This because of the `Asynchronous Iteration` implementation.
 
 
@@ -131,6 +131,6 @@ This because of the `Asynchronous Iteration` implementation.
 *Terms of contribution:*
 
 - Think twice before you try to implement anything
-- Minimum 1.5 mill ops / sec for light weight cases, and 800k - 1 mill ops / sec for "heavy" cases
+- Minimum 1.5 mill ops/sec for light weight cases, and 800k - 1 mill ops/sec for "heavy" cases
 - Avoid duplicating the source code
 - Create tests that cover what you have implemented
