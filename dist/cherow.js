@@ -3293,12 +3293,12 @@ Parser.prototype.parseConditionalExpression = function parseConditionalExpressio
         { return expression; }
     // Valid: '(b = c) => d ? (e, f) : g;'
     // Invalid: '() => {} ? 1 : 2;'
-    if (!(context & 512 /* Concisebody */) && this.flags & 32768 /* Arrow */)
+    if (!(context & 512 /* ConciseBody */) && this.flags & 32768 /* Arrow */)
         { return expression; }
     this.nextToken(context);
-    var consequent = this.parseAssignmentExpression(context & ~512 /* Concisebody */);
+    var consequent = this.parseAssignmentExpression(context & ~512 /* ConciseBody */);
     this.expect(context, 21 /* Colon */);
-    var alternate = this.parseAssignmentExpression(context & ~512 /* Concisebody */);
+    var alternate = this.parseAssignmentExpression(context & ~512 /* ConciseBody */);
     return this.finishNode(pos, {
         type: 'ConditionalExpression',
         test: expression,
@@ -3914,7 +3914,7 @@ Parser.prototype.parseArrowExpression = function parseArrowExpression (context, 
         body = this.parseFunctionBody(context & ~(64 /* SimpleArrow */ | 4096 /* Yield */));
     }
     else {
-        body = this.parseAssignmentExpression(context & ~(64 /* SimpleArrow */ | 4096 /* Yield */) | 512 /* Concisebody */);
+        body = this.parseAssignmentExpression(context & ~(64 /* SimpleArrow */ | 4096 /* Yield */) | 512 /* ConciseBody */);
     }
     this.exitFunctionScope(savedScope);
     return this.finishNode(pos, {
@@ -4878,22 +4878,22 @@ Parser.prototype.parseObjectElement = function parseObjectElement (context) {
             value = this.parseAssignmentPattern(context | 8192 /* AllowIn */, key, pos);
             break;
         default:
+            // Invalid: `class A extends yield B { }`
+            // Invalid: '({[x]})'
+            // Invalid: '({await})'
+            if (computed ||
+                !this.isIdentifier(context, token) ||
+                token === 4205 /* AwaitKeyword */)
+                { this.error(1 /* UnexpectedToken */, tokenDesc(token)); }
             // Invalid: `"use strict"; for ({ eval } of [{}]) ;`
             if (context & 2 /* Strict */ && this.isEvalOrArguments(this.tokenValue))
                 { this.error(103 /* UnexpectedReservedWord */); }
-            // Invalid: `class A extends yield B { }`
-            if (!this.isIdentifier(context, token))
-                { this.error(0 /* Unexpected */); }
             // Invalid: 'function*g() { ({yield}); }'
             if (context & 4096 /* Yield */ &&
                 this.flags & 4 /* InFunctionBody */ &&
                 context & 1024 /* Parenthesis */ &&
                 token === 16490 /* YieldKeyword */)
                 { this.error(113 /* DisallowedInContext */, tokenValue); }
-            // Invalid: '({[x]})'
-            // Invalid: '({await})'
-            if (computed || token === 4205 /* AwaitKeyword */)
-                { this.error(1 /* UnexpectedToken */, tokenDesc(token)); }
             shorthand = true;
             value = key;
     }
