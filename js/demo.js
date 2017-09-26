@@ -25,6 +25,7 @@
       'change #next': 'onNextChange',
       'change #raw': 'onRawChange',
       'change #loc': 'onLocChange',
+      'change #module': 'onModuleChange',
       'click .output-tabs a': 'onTabClick'
     },
 
@@ -40,6 +41,7 @@
       this.$range = this.$el.find('#range');
       this.$next = this.$el.find('#next');
       this.$raw = this.$el.find('#raw');
+      this.$module = this.$el.find('#module');
       this.$loc = this.$el.find('#loc');
       this.$url = this.$el.find('#url');
       this.$outputTabs = this.$el.find('.output-tabs');
@@ -48,6 +50,9 @@
       this.onWindowResize();
       this.onRangeChange();
       this.onLocChange();
+      this.onNextChange();
+      this.onRawChange();
+      this.onModuleChange();
       this.parseURL();
       this.parse();
       this.$input.focus();
@@ -72,6 +77,10 @@
       this._options.raw = this.$raw.prop('checked');
       this.parse();
     },
+    onModuleChange: function(event) {
+      this._options.module = this.$module.prop('checked');
+      this.parse();
+    },
     onLocChange: function(event) {
       this._options.locations = this.$loc.prop('checked');
       this.parse();
@@ -80,19 +89,6 @@
       var method = $(event.currentTarget).data('method');
       this.changeTab(method);
     },
-    changeTab: function(method) {
-      switch (method) {
-        case 'parse':
-        case 'tokenize':
-          this._method = method;
-          this.$outputTabs.find('li').removeClass('active');
-          var $a = this.$outputTabs.find('[data-method=' + method + ']');
-          $a.parent().addClass('active');
-          this.parse();
-          break;
-      }
-    },
-
     parse: function() {
       if (this._timerId) {
         clearTimeout(this._timerId);
@@ -102,7 +98,11 @@
     _parse: function() {
       var result;
       try {
-        result = cherow.parseScript(this.$input.val(), this._options);
+        if (this._options.module) {
+          result = cherow.parseModule(this.$input.val(), this._options);
+        } else {
+          result = cherow.parseScript(this.$input.val(), this._options);
+        }
         result = JSON.stringify(result, null, '    ');
       } catch (e) {
         result = e.message || e;
@@ -120,6 +120,7 @@
         range: this._options.range,
         loc: this._options.locations,
         next: this._options.next,
+        module: this._options.module,
         raw: this._options.raw
       };
       var href = location.href.replace(/[?#].*$/, '');
@@ -139,6 +140,9 @@
       }
       if (params.next === 'true') {
         this.$next.prop('checked', true);
+      }
+      if (params.module === 'true') {
+        this.$module.prop('checked', true);
       }
 
       if (params.method) {

@@ -19,7 +19,12 @@ h2 {
   padding: 0 0 0 8px;
   
 }
-
+#module_code {
+  font-size: 14px;
+  float:right;
+  margin-right:10px;
+  margin-top: 5px;
+}
 .input-title {
   border: 0 none;
   margin-bottom: 12px;
@@ -53,7 +58,10 @@ h2 {
     <div class="row">
       <div class="col-md-6">
         <fieldset>
-          <legend class="input-title">Input</legend>
+          <legend class="input-title">Input
+              <label id ="module_code"><input type="checkbox" id="module"> Module code</label>
+          </legend>
+
           <textarea id="input" class="form-control" placeholder="Write JavaScript code here.">function yield() {}</textarea>
           <div class="sub">
             <label><input type="checkbox" id="range"> Index-based range</label>
