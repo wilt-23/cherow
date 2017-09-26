@@ -34,7 +34,7 @@ export class Parser {
         flags: string;
     };
 
-    constructor(source: string, options ? : Options) {
+    constructor(source: string, options: Options) {
         this.flags = Flags.None;
         this.source = source;
         this.index = 0;
@@ -55,25 +55,20 @@ export class Parser {
         this.functionScope = undefined;
         this.blockScope = undefined;
         this.parentScope = undefined;
+        this.tokens = undefined;
+        this.comments = undefined;
 
-        if (options != null) {
-            if (options.next) this.flags |= Flags.OptionsNext;
-            if (options.jsx) this.flags |= Flags.OptionsJSX;
-            if (options.ranges) this.flags |= Flags.OptionsRanges;
-            if (options.locations) this.flags |= Flags.OptionsLoc;
-            if (options.raw) this.flags |= Flags.OptionsRaw;
-            if (options.v8) this.flags |= Flags.OptionsV8;
+        if (options.next) this.flags |= Flags.OptionsNext;
+        if (options.comments) this.flags |= Flags.OptionsOnComment;
+        if (options.jsx) this.flags |= Flags.OptionsJSX;
+        if (options.locations) this.flags |= Flags.OptionsLoc;
+        if (options.ranges) this.flags |= Flags.OptionsRanges;
+        if (options.raw) this.flags |= Flags.OptionsRaw;
+        if (options.tokens) this.flags |= Flags.OptionsOnToken;
+        if (options.v8) this.flags |= Flags.OptionsV8;
 
-            if (options.tokens) {
-                this.flags |= Flags.OptionsOnToken;
-                this.tokens = options.tokens;
-            }
-
-            if (options.comments) {
-                this.flags |= Flags.OptionsOnComment;
-                this.comments = options.comments;
-            }
-        }
+        if (this.flags & Flags.OptionsOnToken) this.tokens = options.tokens;
+        if (this.flags & Flags.OptionsOnComment) this.comments = options.comments;
     }
 
     // 'strict' are a pre-set bitmask in 'module code',
@@ -1629,7 +1624,7 @@ export class Parser {
     }
 
     private parseModuleItems(context: Context): ESTree.Statement[] {
-        const pos = this.startNode();
+        const pos = this.getLocations();
         this.nextToken(context);
 
         const statements: ESTree.Statement[] = [];
@@ -1664,21 +1659,24 @@ export class Parser {
         return statements;
     }
 
-    private startNode() {
-        return {
-            start: this.startPos,
-            line: this.startLine,
-            column: this.startColumn
-        };
+    private getLocations(): Location | undefined {
+        if (this.flags & (Flags.OptionsRanges | Flags.OptionsLoc)) {
+            return {
+                start: this.startPos,
+                line: this.startLine,
+                column: this.startColumn
+            };
+        }
+        return undefined;
     }
 
-    private finishNode(marker: Location, node: any) {
-        if (hasMask(this.flags, Flags.OptionsRanges)) {
+    private finishNode(marker: Location | undefined, node: any) {
+        if (hasMask(this.flags, Flags.OptionsRanges) && marker) {
             node.start = marker.start;
             node.end = this.endPos;
         }
 
-        if (hasMask(this.flags, Flags.OptionsLoc)) {
+        if (hasMask(this.flags, Flags.OptionsLoc) && marker) {
 
             node.loc = {
                 start: {
@@ -1788,7 +1786,7 @@ export class Parser {
         return hasMask(next, Token.BindingPattern);
     }
 
-    private parseExportDefault(context: Context, pos: Location): ESTree.ExportDefaultDeclaration {
+    private parseExportDefault(context: Context, pos: Location | undefined): ESTree.ExportDefaultDeclaration {
 
         if (this.flags & Flags.InFunctionBody) this.error(Errors.ExportDeclAtTopLevel);
 
@@ -1822,7 +1820,7 @@ export class Parser {
         });
     }
 
-    private parseExportDeclaration(context: Context, pos: Location): ESTree.ExportAllDeclaration | ESTree.ExportNamedDeclaration {
+    private parseExportDeclaration(context: Context, pos: Location | undefined): ESTree.ExportAllDeclaration | ESTree.ExportNamedDeclaration {
 
         if (this.flags & Flags.InFunctionBody) this.error(Errors.ExportDeclAtTopLevel);
 
@@ -1905,7 +1903,7 @@ export class Parser {
     }
 
     private parseExportSpecifier(context: Context): ESTree.ExportSpecifier {
-        const pos = this.startNode();
+        const pos = this.getLocations();
 
         const local = this.parseIdentifier(context);
         let exported = local;
@@ -1924,7 +1922,7 @@ export class Parser {
         });
     }
 
-    private parseExportAllDeclaration(context: Context, pos: Location): ESTree.ExportAllDeclaration {
+    private parseExportAllDeclaration(context: Context, pos: Location | undefined): ESTree.ExportAllDeclaration {
         this.expect(context, Token.Multiply);
         this.expect(context, Token.FromKeyword);
 
@@ -1949,7 +1947,7 @@ export class Parser {
 
         let imported;
         let local;
-        const pos = this.startNode();
+        const pos = this.getLocations();
 
         if (this.isIdentifier(context, this.token)) {
             imported = this.parseBindingIdentifier(context);
@@ -1993,7 +1991,7 @@ export class Parser {
 
     // import <* as foo> ...;
     private parseImportNamespaceSpecifier(context: Context): ESTree.ImportNamespaceSpecifier {
-        const pos = this.startNode();
+        const pos = this.getLocations();
         this.expect(context, Token.Multiply);
 
         if (this.token !== Token.AsKeyword) this.error(Errors.NoAsAfterImportNamespace);
@@ -2010,7 +2008,7 @@ export class Parser {
 
     // import <foo> ...;
     private parseImportDefaultSpecifier(context: Context): ESTree.ImportDefaultSpecifier {
-        return this.finishNode(this.startNode(), {
+        return this.finishNode(this.getLocations(), {
             type: 'ImportDefaultSpecifier',
             local: this.parseIdentifier(context)
         });
@@ -2018,7 +2016,7 @@ export class Parser {
 
     private parseImportDeclaration(context: Context): ESTree.ImportDeclaration {
 
-        const pos = this.startNode();
+        const pos = this.getLocations();
         // Only allowed at 'TopLevel'
         if (this.flags & Flags.InFunctionBody) this.error(Errors.ImportDeclAtTopLevel);
 
@@ -2089,7 +2087,7 @@ export class Parser {
     private parseModuleItem(context: Context): any {
         switch (this.token) {
             case Token.ExportKeyword:
-                const pos = this.startNode();
+                const pos = this.getLocations();
                 this.expect(context, Token.ExportKeyword);
                 if (this.parseOptional(context, Token.DefaultKeyword)) return this.parseExportDefault(context | Context.AllowIn, pos);
                 return this.parseExportDeclaration(context | Context.AllowIn, pos);
@@ -2185,7 +2183,7 @@ export class Parser {
 
     private parseForOrForInOrForOfStatement(context: Context): ESTree.ForInStatement | ESTree.ForOfStatement | ESTree.ForStatement {
 
-        const pos = this.startNode();
+        const pos = this.getLocations();
 
         this.expect(context, Token.ForKeyword);
 
@@ -2225,7 +2223,7 @@ export class Parser {
 
             if (state & IterationState.Variable) {
 
-                const startPos = this.startNode();
+                const startPos = this.getLocations();
                 kind = tokenDesc(this.token);
 
                 // 'var'
@@ -2357,7 +2355,7 @@ export class Parser {
     }
 
     private parseSwitchStatement(context: Context): ESTree.SwitchStatement {
-        const pos = this.startNode();
+        const pos = this.getLocations();
         const SavedFlag = this.flags;
 
         this.expect(context, Token.SwitchKeyword);
@@ -2397,7 +2395,7 @@ export class Parser {
     }
 
     private parseSwitchCase(context: Context): ESTree.SwitchCase {
-        const pos = this.startNode();
+        const pos = this.getLocations();
         let test: any;
 
         switch (this.token) {
@@ -2437,7 +2435,7 @@ export class Parser {
     }
 
     private parseThrowStatement(context: Context): ESTree.ThrowStatement {
-        const pos = this.startNode();
+        const pos = this.getLocations();
         this.expect(context, Token.ThrowKeyword);
 
         if (this.flags & Flags.LineTerminator) this.error(Errors.NewlineAfterThrow);
@@ -2453,7 +2451,7 @@ export class Parser {
     }
 
     private parseWithStatement(context: Context): ESTree.WithStatement {
-        const pos = this.startNode();
+        const pos = this.getLocations();
 
         // Invalid `"use strict"; with ({}) { }`
         if (context & Context.Strict) this.error(Errors.StrictModeWith);
@@ -2471,7 +2469,7 @@ export class Parser {
     }
 
     private parseWhileStatement(context: Context): ESTree.WhileStatement {
-        const pos = this.startNode();
+        const pos = this.getLocations();
 
         this.expect(context, Token.WhileKeyword);
         this.expect(context, Token.LeftParen);
@@ -2494,7 +2492,7 @@ export class Parser {
     }
 
     private parseDoWhileStatement(context: Context): ESTree.DoWhileStatement {
-        const pos = this.startNode();
+        const pos = this.getLocations();
         this.expect(context, Token.DoKeyword);
 
         const savedFlag = this.flags;
@@ -2521,7 +2519,7 @@ export class Parser {
     }
 
     private parseContinueStatement(context: Context): ESTree.ContinueStatement {
-        const pos = this.startNode();
+        const pos = this.getLocations();
         this.expect(context, Token.ContinueKeyword);
 
         if (this.flags & Flags.LineTerminator || this.parseOptional(context, Token.Semicolon)) {
@@ -2550,7 +2548,7 @@ export class Parser {
     }
 
     private parseBreakStatement(context: Context): ESTree.BreakStatement {
-        const pos = this.startNode();
+        const pos = this.getLocations();
         this.expect(context, Token.BreakKeyword);
 
         if (this.parseOptional(context, Token.Semicolon)) {
@@ -2589,13 +2587,13 @@ export class Parser {
 
     private parseLabelledStatement(context: Context): ESTree.LabeledStatement | ESTree.ExpressionStatement {
 
-        const pos = this.startNode();
+        const pos = this.getLocations();
         const token = this.token;
         const expr = this.parseExpression(context | Context.AllowIn);
 
         if (this.parseOptional(context, Token.Colon) && expr.type === 'Identifier') {
             // Invalid: `for (const x of []) label1: label2: function f() {}`
-            if (!(this.flags & Flags.Switch) && context & Context.ForStatement &&  this.token === Token.Identifier) this.error(Errors.InvalidLabeledForOf);
+            if (!(this.flags & Flags.Switch) && context & Context.ForStatement && this.token === Token.Identifier) this.error(Errors.InvalidLabeledForOf);
             const key = '@' + expr.name;
             if (hasOwn.call(this.labelSet, key)) this.error(Errors.Redeclaration, expr.name);
 
@@ -2625,7 +2623,7 @@ export class Parser {
         }
     }
     private parseDebuggerStatement(context: Context): ESTree.DebuggerStatement {
-        const pos = this.startNode();
+        const pos = this.getLocations();
         this.expect(context, Token.DebuggerKeyword);
         this.consumeSemicolon(context);
         return this.finishNode(pos, {
@@ -2643,7 +2641,7 @@ export class Parser {
     }
 
     private parseIfStatement(context: Context): ESTree.IfStatement {
-        const pos = this.startNode();
+        const pos = this.getLocations();
         this.expect(context, Token.IfKeyword);
         this.expect(context, Token.LeftParen);
         // An IF node has three kids: test, alternate, and optional else
@@ -2669,7 +2667,7 @@ export class Parser {
     }
 
     private parseReturnStatement(context: Context): ESTree.ReturnStatement {
-        const pos = this.startNode();
+        const pos = this.getLocations();
 
         if (!(this.flags & Flags.InFunctionBody)) this.error(Errors.IllegalReturn);
 
@@ -2689,7 +2687,7 @@ export class Parser {
 
     private parseFunctionDeclaration(context: Context): ESTree.FunctionDeclaration {
 
-        const pos = this.startNode();
+        const pos = this.getLocations();
         const savedFlags = this.flags;
         const parentHasYield = !!(context & Context.Yield);
 
@@ -2774,7 +2772,7 @@ export class Parser {
     }
 
     private parseTryStatement(context: Context): ESTree.TryStatement {
-        const pos = this.startNode();
+        const pos = this.getLocations();
 
         this.expect(context, Token.TryKeyword);
 
@@ -2800,7 +2798,7 @@ export class Parser {
     }
 
     private parseCatchClause(context: Context): ESTree.CatchClause {
-        const pos = this.startNode();
+        const pos = this.getLocations();
         this.expect(context, Token.CatchKeyword);
 
         const blockScope = this.blockScope;
@@ -2841,7 +2839,7 @@ export class Parser {
     }
 
     private parseBlockStatement(context: Context): ESTree.BlockStatement {
-        const pos = this.startNode();
+        const pos = this.getLocations();
         const body: ESTree.Statement[] = [];
         const flag = this.flags;
         const blockScope = this.blockScope;
@@ -2865,7 +2863,7 @@ export class Parser {
     }
 
     private parseVariableStatement(context: Context) {
-        const pos = this.startNode();
+        const pos = this.getLocations();
         const token = this.token;
         this.nextToken(context);
         // Invalid: 'async() => { var await; }'
@@ -2889,7 +2887,7 @@ export class Parser {
 
     private parseVariableDeclaration(context: Context): ESTree.VariableDeclarator {
         let init = null;
-        const pos = this.startNode();
+        const pos = this.getLocations();
         const token = this.token;
         const id = this.parseBindingPatternOrIdentifier(context | Context.Binding);
 
@@ -2930,7 +2928,7 @@ export class Parser {
     }
 
     private parseEmptyStatement(context: Context): ESTree.EmptyStatement {
-        const pos = this.startNode();
+        const pos = this.getLocations();
         this.nextToken(context);
         return this.finishNode(pos, {
             type: 'EmptyStatement'
@@ -2941,7 +2939,7 @@ export class Parser {
         // Expression[in]:
         //      AssignmentExpression[in]
         //      Expression[in] , AssignmentExpression[in]
-        const pos = this.startNode();
+        const pos = this.getLocations();
         const expr = this.parseAssignmentExpression(context);
 
         if (this.token === Token.Comma) {
@@ -2961,7 +2959,7 @@ export class Parser {
         return expr;
     }
 
-    private parseYieldExpression(context: Context, pos: Location): ESTree.YieldExpression {
+    private parseYieldExpression(context: Context, pos: Location | undefined): ESTree.YieldExpression {
 
         // YieldExpression[In] :
         //      yield
@@ -3001,7 +2999,7 @@ export class Parser {
     }
 
     // 12.15.5Destructuring Assignment
-    private parseAssignmentPattern(context: Context, left: any, pos: Location): ESTree.AssignmentPattern {
+    private parseAssignmentPattern(context: Context, left: any, pos: Location | undefined): ESTree.AssignmentPattern {
         // Invalid: '({async foo(a = await b) {}})'
         if (this.flags & Flags.ArgumentList && this.token === Token.AwaitKeyword) this.error(Errors.Unexpected);
         const right = this.parseAssignmentExpression(context);
@@ -3015,7 +3013,7 @@ export class Parser {
 
     private parseAssignmentExpression(context: Context): ESTree.Expression {
 
-        const pos = this.startNode();
+        const pos = this.getLocations();
 
         if (context & Context.Yield && this.token === Token.YieldKeyword) return this.parseYieldExpression(context, pos);
 
@@ -3060,7 +3058,7 @@ export class Parser {
      * @param context Context
      * @param expression  ESTree.Expression
      */
-    private parseConditionalExpression(context: Context, expression: ESTree.Expression, pos: Location): ESTree.Expression {
+    private parseConditionalExpression(context: Context, expression: ESTree.Expression, pos: Location | undefined): ESTree.Expression {
 
         if (this.token !== Token.QuestionMark) return expression;
 
@@ -3101,7 +3099,7 @@ export class Parser {
      */
     private parseUnaryExpression(context: Context): ESTree.UnaryExpression | ESTree.Expression {
 
-        const pos = this.startNode();
+        const pos = this.getLocations();
 
         if (isUpdateExpression(this.token, this.flags)) {
             const incrementExpression = this.parseUpdateExpression(context, pos);
@@ -3133,7 +3131,7 @@ export class Parser {
      */
     private parseSimpleUnaryExpression(context: Context): ESTree.Expression {
 
-        const pos = this.startNode();
+        const pos = this.getLocations();
 
         if (isUunaryExpression(this.token)) {
 
@@ -3151,7 +3149,7 @@ export class Parser {
         return this.parseUpdateExpression(context, pos);
     }
 
-    private parseAwaitExpression(context: Context, pos: Location): ESTree.AwaitExpression {
+    private parseAwaitExpression(context: Context, pos: Location | undefined): ESTree.AwaitExpression {
 
         this.expect(context, Token.AwaitKeyword);
 
@@ -3162,7 +3160,7 @@ export class Parser {
         });
     }
 
-    private parseBinaryExpression(context: Context, minPrecedence: number, pos: Location, expression = this.parseUnaryExpression(context)): ESTree.Expression {
+    private parseBinaryExpression(context: Context, minPrecedence: number, pos: Location | undefined, expression = this.parseUnaryExpression(context)): ESTree.Expression {
 
         loop: while (true) {
 
@@ -3205,7 +3203,7 @@ export class Parser {
         return value === 'eval' || value === 'arguments';
     }
 
-    private parseUpdateExpression(context: Context, pos: Location): ESTree.Expression {
+    private parseUpdateExpression(context: Context, pos: Location | undefined): ESTree.Expression {
         let argument: any;
         if (this.token === Token.Increment || this.token === Token.Decrement) {
 
@@ -3263,7 +3261,7 @@ export class Parser {
         return argument;
     }
 
-    private parseImportCall(context: Context, pos: Location): ESTree.Expression {
+    private parseImportCall(context: Context, pos: Location | undefined): ESTree.Expression {
         this.expect(context, Token.ImportKeyword);
         // Invalid: 'function failsParse() { return import.then(); }'
         if (this.token !== Token.LeftParen) this.error(Errors.UnexpectedToken, tokenDesc(this.token));
@@ -3272,7 +3270,7 @@ export class Parser {
         });
     }
 
-    private parseLeftHandSideExpression(context: Context, pos: Location): ESTree.Expression {
+    private parseLeftHandSideExpression(context: Context, pos: Location | undefined): ESTree.Expression {
         switch (this.token) {
             case Token.ImportKeyword:
                 if (!(this.flags & Flags.OptionsNext)) this.error(Errors.UnexpectedToken, tokenDesc(this.token));
@@ -3292,7 +3290,7 @@ export class Parser {
         }
     }
 
-    private parseParenthesizedExpression(context: Context, pos: Location) {
+    private parseParenthesizedExpression(context: Context, pos: Location | undefined) {
 
         this.expect(context, Token.LeftParen);
 
@@ -3400,7 +3398,7 @@ export class Parser {
     }
 
     private parseRestElement(context: Context): ESTree.RestElement {
-        const pos = this.startNode();
+        const pos = this.getLocations();
         this.expect(context, Token.Ellipsis);
         const argument = this.parseBindingPatternOrIdentifier(context | Context.Binding);
         if (this.token === Token.Assign) this.error(Errors.DefaultRestParameter);
@@ -3455,7 +3453,7 @@ export class Parser {
 
         if (!(context & Context.ForStatement)) this.addVarOrBlock(context, name);
 
-        const pos = this.startNode();
+        const pos = this.getLocations();
 
         this.nextToken(context);
 
@@ -3466,7 +3464,7 @@ export class Parser {
     }
 
     private parseAssignmentElementList(context: Context): ESTree.ArrayPattern {
-        const pos = this.startNode();
+        const pos = this.getLocations();
         this.expect(context, Token.LeftBracket);
 
         if (this.flags & Flags.ArgumentList) this.flags |= Flags.NonSimpleParameter;
@@ -3501,7 +3499,7 @@ export class Parser {
     }
 
     private parseAssignmentRestElement(context: Context): any {
-        const pos = this.startNode();
+        const pos = this.getLocations();
         this.expect(context, Token.Ellipsis);
         const argument = this.parseBindingPatternOrIdentifier(context | Context.Binding);
         if (this.token === Token.Assign) this.error(Errors.DefaultRestParameter);
@@ -3512,7 +3510,7 @@ export class Parser {
     }
 
     private parseArrayAssignmentPattern(context: Context): any {
-        const pos = this.startNode();
+        const pos = this.getLocations();
 
         const left = this.parseBindingPatternOrIdentifier(context | Context.Binding);
 
@@ -3521,7 +3519,7 @@ export class Parser {
     }
 
     private parseAssignmentPropertyList(context: Context): ESTree.ObjectPattern {
-        const pos = this.startNode();
+        const pos = this.getLocations();
         const properties: (ESTree.AssignmentProperty | ESTree.RestElement)[] = [];
         if (this.flags & Flags.ArgumentList) this.flags |= Flags.NonSimpleParameter;
 
@@ -3562,7 +3560,7 @@ export class Parser {
 
     private parseAssignmentProperty(context: Context): ESTree.AssignmentProperty | ESTree.RestElement {
 
-        const pos = this.startNode();
+        const pos = this.getLocations();
         const method = false;
         const token = this.token;
         const isIdentifier = this.isIdentifier(context, this.token);
@@ -3638,7 +3636,7 @@ export class Parser {
     }
 
     private parseRestProperty(context: Context): ESTree.RestElement {
-        const pos = this.startNode();
+        const pos = this.getLocations();
         this.expect(context, Token.Ellipsis);
         if (this.token !== Token.Identifier) this.error(Errors.InvalidRestOperatorArg);
         const arg = this.parseBindingPatternOrIdentifier(context | Context.Binding);
@@ -3710,7 +3708,7 @@ export class Parser {
         }
     }
 
-    private parseArrowExpression(context: Context, pos: Location, params: ESTree.Node[]): ESTree.ArrowFunctionExpression {
+    private parseArrowExpression(context: Context, pos: Location | undefined, params: ESTree.Node[]): ESTree.ArrowFunctionExpression {
 
         // Invalid:  'async abc\n => function () {  }'
         if (this.flags & Flags.LineTerminator) this.error(Errors.UnexpectedArrow);
@@ -3828,7 +3826,7 @@ export class Parser {
     }
 
     private parseSuper(context: Context): ESTree.Expression {
-        const pos = this.startNode();
+        const pos = this.getLocations();
         this.expect(context, Token.SuperKeyword);
 
         switch (this.token) {
@@ -3848,7 +3846,7 @@ export class Parser {
 
     private parseFunctionBody(context: Context): ESTree.BlockStatement {
 
-        const pos = this.startNode();
+        const pos = this.getLocations();
 
         const body: ESTree.Statement[] = [];
         const savedFunction = hasMask(this.flags, Flags.InFunctionBody);
@@ -3899,7 +3897,7 @@ export class Parser {
 
     private parseCallExpression(
         context: Context,
-        pos: Location,
+        pos: Location | undefined,
         expr: ESTree.Expression
     ): ESTree.Expression {
 
@@ -3948,7 +3946,7 @@ export class Parser {
         }
     }
 
-    private parseNonComputedMemberExpression(context: Context, expr: ESTree.Expression, pos: Location): ESTree.MemberExpression {
+    private parseNonComputedMemberExpression(context: Context, expr: ESTree.Expression, pos: Location | undefined): ESTree.MemberExpression {
         const property = this.parseIdentifier(context);
         return this.finishNode(pos, {
             type: 'MemberExpression',
@@ -3958,7 +3956,7 @@ export class Parser {
         });
     }
 
-    private parseComputedMemberExpression(context: Context, expr: ESTree.Expression, pos: Location): ESTree.MemberExpression {
+    private parseComputedMemberExpression(context: Context, expr: ESTree.Expression, pos: Location | undefined): ESTree.MemberExpression {
         const property = this.parseExpression(context);
         return this.finishNode(pos, {
             type: 'MemberExpression',
@@ -3970,7 +3968,7 @@ export class Parser {
 
     private parseMemberExpression(
         context: Context,
-        pos: Location,
+        pos: Location | undefined,
         expr: ESTree.CallExpression | ESTree.Expression = this.parsePrimaryExpression(context, pos)
     ): ESTree.Expression {
 
@@ -3997,13 +3995,13 @@ export class Parser {
             }
 
             if (this.token === Token.TemplateCont) {
-                const quasi = this.parseTemplate(context, this.startNode());
+                const quasi = this.parseTemplate(context, this.getLocations());
                 expr = this.parseTaggedTemplateExpression(context, expr, quasi, pos);
                 continue;
             }
 
             if (this.token === Token.TemplateTail) {
-                const quasi = this.parseTemplateTail(context, this.startNode())
+                const quasi = this.parseTemplateTail(context, this.getLocations())
                 expr = this.parseTaggedTemplateExpression(context, expr, quasi, pos);
 
                 continue;
@@ -4039,7 +4037,7 @@ export class Parser {
         return args;
     }
 
-    private parseMetaProperty(context: Context, meta: ESTree.Identifier, pos: Location): ESTree.MetaProperty {
+    private parseMetaProperty(context: Context, meta: ESTree.Identifier, pos: Location | undefined): ESTree.MetaProperty {
         const property = this.parseIdentifier(context);
         return this.finishNode(pos, {
             meta,
@@ -4050,7 +4048,7 @@ export class Parser {
 
     private parseNewExpression(context: Context): ESTree.MetaProperty | ESTree.NewExpression {
 
-        const pos = this.startNode();
+        const pos = this.getLocations();
 
         const id = this.parseIdentifier(context);
 
@@ -4083,7 +4081,7 @@ export class Parser {
     }
 
     private parseSpreadElement(context: Context): ESTree.SpreadElement {
-        const pos = this.startNode();
+        const pos = this.getLocations();
 
         // Disallow SpreadElement inside dynamic import
         if (context & Context.DynamicImport) this.error(Errors.UnexpectedToken, tokenDesc(this.token));
@@ -4096,7 +4094,7 @@ export class Parser {
     }
 
     private parseArrayExpression(context: Context) {
-        const pos = this.startNode();
+        const pos = this.getLocations();
         this.expect(context, Token.LeftBracket);
 
         const elements = [];
@@ -4130,7 +4128,7 @@ export class Parser {
         const parentHasYield = !!(context & Context.Yield);
         if (context & (Context.Yield | Context.Await)) context &= ~(Context.Yield | Context.Await);
 
-        const pos = this.startNode();
+        const pos = this.getLocations();
 
         if (this.parseOptional(context, Token.AsyncKeyword)) {
             if (this.flags & Flags.LineTerminator) this.error(Errors.LineBreakAfterAsync);
@@ -4241,7 +4239,7 @@ export class Parser {
         flags: ObjectFlags
     ): ESTree.AssignmentPattern | ESTree.Identifier | ESTree.ObjectPattern | ESTree.ArrayPattern | ESTree.RestElement {
 
-        const pos = this.startNode();
+        const pos = this.getLocations();
 
         // Invalid: 'function a(yield){ 'use strict'; }':
         if (hasMask(this.token, Token.FutureReserved)) {
@@ -4267,7 +4265,7 @@ export class Parser {
         return this.parseAssignmentPattern(context, param, pos);
     }
 
-    private parseIdentifierOrArrow(context: Context, pos: Location): ESTree.Identifier | ESTree.ArrowFunctionExpression {
+    private parseIdentifierOrArrow(context: Context, pos: Location | undefined): ESTree.Identifier | ESTree.ArrowFunctionExpression {
         const token = this.token;
         const tokenValue = this.tokenValue;
         if (!this.isIdentifier(context, this.token)) this.error(Errors.UnexpectedToken, tokenDesc(token));
@@ -4296,7 +4294,7 @@ export class Parser {
         return expr;
     }
 
-    private parsePrimaryExpression(context: Context, pos: Location): ESTree.Expression {
+    private parsePrimaryExpression(context: Context, pos: Location | undefined): ESTree.Expression {
 
         switch (this.token) {
             case Token.Divide:
@@ -4342,7 +4340,7 @@ export class Parser {
 
                 if (this.flags & Flags.Arrow) this.flags &= ~Flags.Arrow;
 
-                pos = this.startNode();
+                pos = this.getLocations();
                 // 'async' could be an plain identifier, so we can't "expect" anything
                 let expr = this.parseIdentifier(context);
                 const token = this.token;
@@ -4395,7 +4393,7 @@ export class Parser {
     // NOTE! By doing it this way we are about 67% faster than Esprima, and 83% faster
     // than Acorn in micro-benchmarks. And we hit the 3 mill ops/sec milestone in
     // a few cases. Average 1.9 mill ops/sec. This is DAMN fast!!
-    private parseTemplateTail(context: Context, pos: Location): ESTree.TemplateLiteral {
+    private parseTemplateTail(context: Context, pos: Location | undefined): ESTree.TemplateLiteral {
         const quasis = this.parseTemplateElement(context, pos);
         return this.finishNode(pos, {
             type: 'TemplateLiteral',
@@ -4405,7 +4403,7 @@ export class Parser {
     }
 
     private parseTemplateHead(context: Context, cooked: string, raw: string): ESTree.TemplateElement {
-        const pos = this.startNode();
+        const pos = this.getLocations();
         this.token = this.scanTemplateNext(context);
         return this.finishNode(pos, {
             type: 'TemplateElement',
@@ -4417,7 +4415,7 @@ export class Parser {
         });
     }
 
-    private parseTemplateElement(context: Context, pos: Location): ESTree.TemplateElement {
+    private parseTemplateElement(context: Context, pos: Location | undefined): ESTree.TemplateElement {
         const cooked = this.tokenValue;
         const raw = this.tokenRaw;
         this.expect(context, Token.TemplateTail);
@@ -4431,7 +4429,7 @@ export class Parser {
         });
     }
 
-    private parseTaggedTemplateExpression(context: Context, expr: ESTree.Expression, quasi: any, pos: Location): ESTree.TaggedTemplateExpression {
+    private parseTaggedTemplateExpression(context: Context, expr: ESTree.Expression, quasi: any, pos: Location | undefined): ESTree.TaggedTemplateExpression {
         return this.finishNode(pos, {
             type: 'TaggedTemplateExpression',
             tag: expr,
@@ -4439,7 +4437,7 @@ export class Parser {
         });
     }
 
-    private parseTemplate(context: Context, pos: Location): ESTree.TemplateLiteral {
+    private parseTemplate(context: Context, pos: Location | undefined): ESTree.TemplateLiteral {
 
         const expressions: ESTree.Expression[] = [];
         const quasis: ESTree.TemplateElement[] = [];
@@ -4465,7 +4463,7 @@ export class Parser {
     }
 
     private parseClassDeclaration(context: Context): ESTree.ClassDeclaration {
-        const pos = this.startNode();
+        const pos = this.getLocations();
 
         this.expect(context, Token.ClassKeyword);
 
@@ -4510,7 +4508,7 @@ export class Parser {
 
     private parseClassExpression(context: Context): ESTree.ClassExpression {
 
-        const pos = this.startNode();
+        const pos = this.getLocations();
 
         this.expect(context, Token.ClassKeyword);
         // In ES6 specification, All parts of a ClassDeclaration or a ClassExpression are strict mode code
@@ -4548,7 +4546,7 @@ export class Parser {
     }
 
     private parseClassBody(context: Context): ESTree.ClassBody {
-        const pos = this.startNode();
+        const pos = this.getLocations();
         const elementList = this.parseClassElementList(context);
         return this.finishNode(pos, {
             type: 'ClassBody',
@@ -4558,7 +4556,7 @@ export class Parser {
 
     private parseClassElement(context: Context): ESTree.MethodDefinition {
 
-        const pos = this.startNode();
+        const pos = this.getLocations();
         const token = this.token;
 
         let flags = ObjectFlags.None;
@@ -4659,7 +4657,7 @@ export class Parser {
     }
 
     private parseObjectExpression(context: Context): ESTree.ObjectExpression {
-        const pos = this.startNode();
+        const pos = this.getLocations();
         this.flags &= ~Flags.HasPrototype;
 
         if (this.flags & Flags.ArgumentList) this.flags |= Flags.NonSimpleParameter;
@@ -4689,7 +4687,7 @@ export class Parser {
             return this.parseSpreadElement(context);
         }
 
-        const pos = this.startNode();
+        const pos = this.getLocations();
         const tokenValue = this.tokenValue;
         const token = this.token;
 
@@ -4848,7 +4846,7 @@ export class Parser {
 
     private parseFunctionMethod(context: Context, flags: ObjectFlags) {
 
-        const pos = this.startNode();
+        const pos = this.getLocations();
 
         if (context & Context.Yield) context &= ~Context.Yield;
 
@@ -4880,7 +4878,7 @@ export class Parser {
 
     private parseRegularExpression(context: Context): ESTree.RegExpLiteral {
 
-        const pos = this.startNode();
+        const pos = this.getLocations();
         const regex = this.tokenRegExp;
         const value = this.tokenValue;
         const raw = this.tokenRaw;
@@ -4899,7 +4897,7 @@ export class Parser {
     }
 
     private parseLiteral(context: Context): ESTree.Literal {
-        const pos = this.startNode();
+        const pos = this.getLocations();
         const value = this.tokenValue;
         const raw = this.tokenRaw;
 
@@ -4919,7 +4917,7 @@ export class Parser {
 
     private parseIdentifier(context: Context): ESTree.Identifier {
         const name = this.tokenValue;
-        const pos = this.startNode();
+        const pos = this.getLocations();
         if (context & Context.Await && this.token === Token.AwaitKeyword) this.error(Errors.UnexpectedToken, tokenDesc(this.token));
         this.nextToken(context);
 
@@ -4930,7 +4928,7 @@ export class Parser {
     }
 
     private parseFalseExpression(context: Context): ESTree.Literal {
-        const pos = this.startNode();
+        const pos = this.getLocations();
         this.nextToken(context);
         const node = this.finishNode(pos, {
             type: 'Literal',
@@ -4943,7 +4941,7 @@ export class Parser {
     }
 
     private parseTrueExpression(context: Context): ESTree.Literal {
-        const pos = this.startNode();
+        const pos = this.getLocations();
         this.nextToken(context);
         const node = this.finishNode(pos, {
             type: 'Literal',
@@ -4956,7 +4954,7 @@ export class Parser {
     }
 
     private parseThisExpression(context: Context): ESTree.ThisExpression {
-        const pos = this.startNode();
+        const pos = this.getLocations();
         this.nextToken(context);
         return this.finishNode(pos, {
             type: 'ThisExpression'
@@ -4964,7 +4962,7 @@ export class Parser {
     }
 
     private parseNullExpression(context: Context): ESTree.Literal {
-        const pos = this.startNode();
+        const pos = this.getLocations();
         this.nextToken(context);
         const node = this.finishNode(pos, {
             type: 'Literal',
@@ -5076,7 +5074,7 @@ export class Parser {
     /** V8 */
 
     private parseDoExpression(context: Context): ESTree.Expression {
-        const pos = this.startNode();
+        const pos = this.getLocations();
         this.expect(context, Token.DoKeyword);
         const body = this.parseBlockStatement(context);
         return this.finishNode(pos, {
@@ -5090,7 +5088,7 @@ export class Parser {
 
     private parseJSXIdentifier(context: Context): ESTree.JSXIdentifier {
         const name = this.tokenValue;
-        const pos = this.startNode();
+        const pos = this.getLocations();
         this.nextToken(context);
         return this.finishNode(pos, {
             type: 'JSXIdentifier',
@@ -5098,7 +5096,7 @@ export class Parser {
         });
     }
 
-    private parseJSXMemberExpression(context: Context, expr: any, pos: Location): ESTree.JSXMemberExpression {
+    private parseJSXMemberExpression(context: Context, expr: any, pos: Location | undefined): ESTree.JSXMemberExpression {
         return this.finishNode(pos, {
             type: 'JSXMemberExpression',
             object: expr,
@@ -5107,7 +5105,7 @@ export class Parser {
     }
 
     private parseJSXElementName(context: Context): ESTree.Node {
-        const pos = this.startNode();
+        const pos = this.getLocations();
 
         this.scanJSXIdentifier(context);
         // Parse in a 'JSXChild' context to avoid edge cases
@@ -5129,7 +5127,7 @@ export class Parser {
     private parseJSXNamespacedName(
         context: Context,
         namespace: ESTree.JSXIdentifier | ESTree.JSXMemberExpression,
-        pos: Location
+        pos: Location | undefined
     ): ESTree.JSXNamespacedName {
         this.expect(context, Token.Colon);
         const name = this.parseJSXIdentifier(context);
@@ -5141,7 +5139,7 @@ export class Parser {
     }
 
     private parseJSXSpreadAttribute(context: Context) {
-        const pos = this.startNode();
+        const pos = this.getLocations();
         this.expect(context, Token.LeftBrace);
         this.expect(context, Token.Ellipsis);
         const expression = this.parseExpression(context);
@@ -5214,7 +5212,7 @@ export class Parser {
     }
 
     private parseJSXSpreadChild(context: Context): ESTree.JSXSpreadChild {
-        const pos = this.startNode();
+        const pos = this.getLocations();
         this.expect(context, Token.Ellipsis);
         const expression = this.parseExpression(context);
         this.expect(context, Token.RightBrace);
@@ -5226,7 +5224,7 @@ export class Parser {
 
     private parseJSXExpressionContainer(context: Context): ESTree.JSXExpressionContainer | ESTree.JSXSpreadChild {
 
-        const pos = this.startNode();
+        const pos = this.getLocations();
 
         this.expect(context, Token.LeftBrace);
 
@@ -5257,7 +5255,7 @@ export class Parser {
 
     private parseJSXExpressionAttribute(context: Context): ESTree.JSXExpressionContainer | ESTree.JSXSpreadChild {
 
-        const pos = this.startNode();
+        const pos = this.getLocations();
 
         this.expect(context, Token.LeftBrace);
 
@@ -5280,7 +5278,7 @@ export class Parser {
     }
 
     private parseJSXAttributeName(context: Context): ESTree.JSXIdentifier | ESTree.JSXNamespacedName {
-        const pos = this.startNode();
+        const pos = this.getLocations();
         const identifier: ESTree.JSXIdentifier = this.parseJSXIdentifier(context);
         if (this.token !== Token.Colon) return identifier;
         return this.parseJSXNamespacedName(context, identifier, pos);
@@ -5288,7 +5286,7 @@ export class Parser {
 
     private parseJSXAttribute(context: Context): ESTree.JSXAttribute {
 
-        const pos = this.startNode();
+        const pos = this.getLocations();
         let value = null;
         const attrName = this.parseJSXAttributeName(context);
 
@@ -5375,7 +5373,7 @@ export class Parser {
     }
 
     private parseJSXOpeningElement(context: Context) {
-        const pos = this.startNode();
+        const pos = this.getLocations();
 
         this.expect(context, Token.LessThan);
         const tagName = this.parseJSXElementName(context);
@@ -5417,7 +5415,7 @@ export class Parser {
 
     private parseJSXClosingElement(context: Context) {
 
-        const pos = this.startNode();
+        const pos = this.getLocations();
         this.expect(context, Token.JSXClose);
         const name = this.parseJSXElementName(context);
         // Because advance() (called by nextToken() called by expect()) expects there
@@ -5437,7 +5435,7 @@ export class Parser {
 
     private parseJSXElement(context: Context): ESTree.JSXElement {
 
-        const pos = this.startNode();
+        const pos = this.getLocations();
         const children: (ESTree.JSXText | ESTree.JSXExpressionContainer | ESTree.JSXSpreadChild | ESTree.JSXElement | undefined)[] = [];
         let closingElement = null;
 
@@ -5471,7 +5469,7 @@ export class Parser {
     }
 
     private parseJSXText(context: Context): ESTree.JSXText {
-        const pos = this.startNode();
+        const pos = this.getLocations();
         const value = this.source.slice(this.startPos, this.index);
 
         this.token = this.scanJSXToken();
@@ -5506,5 +5504,4 @@ export class Parser {
                 this.error(Errors.Unexpected);
         }
     }
-
 }
