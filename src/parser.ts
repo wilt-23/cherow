@@ -2595,7 +2595,7 @@ export class Parser {
 
         if (this.parseOptional(context, Token.Colon) && expr.type === 'Identifier') {
             // Invalid: `for (const x of []) label1: label2: function f() {}`
-            if (context & Context.ForStatement && this.token === Token.Identifier) this.error(Errors.InvalidLabeledForOf);
+            if (!(this.flags & Flags.Switch) && context & Context.ForStatement &&  this.token === Token.Identifier) this.error(Errors.InvalidLabeledForOf);
             const key = '@' + expr.name;
             if (hasOwn.call(this.labelSet, key)) this.error(Errors.Redeclaration, expr.name);
 

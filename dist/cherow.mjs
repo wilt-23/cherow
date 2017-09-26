@@ -2878,7 +2878,7 @@ Parser.prototype.parseLabelledStatement = function parseLabelledStatement (conte
     var expr = this.parseExpression(context | 8192 /* AllowIn */);
     if (this.parseOptional(context, 21 /* Colon */) && expr.type === 'Identifier') {
         // Invalid: `for (const x of []) label1: label2: function f() {}`
-        if (context & 16384 /* ForStatement */ && this.token === 65537 /* Identifier */)
+        if (!(this.flags & 8192 /* Switch */) && context & 16384 /* ForStatement */ && this.token === 65537 /* Identifier */)
             { this.error(121 /* InvalidLabeledForOf */); }
         var key = '@' + expr.name;
         if (hasOwn.call(this.labelSet, key))
