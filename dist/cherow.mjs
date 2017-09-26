@@ -1190,8 +1190,30 @@ Parser.prototype.scanToken = function scanToken (context) {
                     this$1.advance();
                     return 13 /* Period */;
                 }
-            // '0' - '9'
+            // '0'
             case 48 /* Zero */:
+                {
+                    var index$2 = this$1.index + 1;
+                    if (index$2 + 1 < this$1.source.length) {
+                        switch (this$1.source.charCodeAt(index$2)) {
+                            case 120 /* LowerX */:
+                            case 88 /* UpperX */:
+                                return this$1.scanHexadecimalDigit();
+                            case 98 /* LowerB */:
+                            case 66 /* UpperB */:
+                                return this$1.scanBinaryDigits(context);
+                            case 111 /* LowerO */:
+                            case 79 /* UpperO */:
+                                return this$1.scanOctalDigits(context);
+                            default: // ignore
+                        }
+                    }
+                    var ch = this$1.source.charCodeAt(index$2);
+                    if (index$2 < this$1.source.length && 48 /* Zero */ <= ch && ch <= 55 /* Seven */) {
+                        return this$1.scanNumberLiteral(context);
+                    }
+                }
+            // '1' - '9'
             case 49 /* One */:
             case 50 /* Two */:
             case 51 /* Three */:
@@ -1557,25 +1579,6 @@ Parser.prototype.skipDigits = function skipDigits () {
 };
 Parser.prototype.scanNumber = function scanNumber (context, ch) {
     var start = this.index;
-    if (ch === 48 /* Zero */) {
-        ch = this.source.charCodeAt(this.index + 1);
-        if (ch === 92 /* Backslash */)
-            { this.error(0 /* Unexpected */); }
-        switch (ch) {
-            case 120 /* LowerX */:
-            case 88 /* UpperX */:
-                return this.scanHexadecimalDigit();
-            case 98 /* LowerB */:
-            case 66 /* UpperB */:
-                return this.scanBinaryDigits(context);
-            case 111 /* LowerO */:
-            case 79 /* UpperO */:
-                return this.scanOctalDigits(context);
-            default:
-                if (48 /* Zero */ <= ch && ch <= 55 /* Seven */)
-                    { return this.scanNumberLiteral(context); }
-        }
-    }
     this.skipDigits();
     if (this.nextChar() === 46 /* Period */) {
         this.advance();
@@ -3908,6 +3911,8 @@ Parser.prototype.parseArrowExpression = function parseArrowExpression (context, 
         body = this.parseFunctionBody(context & ~(64 /* SimpleArrow */ | 4096 /* Yield */));
     }
     else {
+        // unset the flag here
+        this.flags &= ~32768 /* Arrow */;
         body = this.parseAssignmentExpression(context & ~(64 /* SimpleArrow */ | 4096 /* Yield */) | 512 /* ConciseBody */);
     }
     this.exitFunctionScope(savedScope);

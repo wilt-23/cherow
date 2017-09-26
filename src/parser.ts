@@ -686,8 +686,34 @@ export class Parser {
                         return Token.Period;
                     }
 
-                    // '0' - '9'
+                    // '0'
                 case Chars.Zero:
+                    {
+                        const index = this.index + 1;
+
+                        if (index + 1 < this.source.length) {
+                            switch (this.source.charCodeAt(index)) {
+                                case Chars.LowerX:
+                                case Chars.UpperX:
+                                    return this.scanHexadecimalDigit();
+                                case Chars.LowerB:
+                                case Chars.UpperB:
+                                    return this.scanBinaryDigits(context);
+                                case Chars.LowerO:
+                                case Chars.UpperO:
+                                    return this.scanOctalDigits(context);
+                                default: // ignore
+                            }
+                        }
+
+                        const ch = this.source.charCodeAt(index);
+
+                        if (index < this.source.length && Chars.Zero <= ch && ch <= Chars.Seven) {
+                            return this.scanNumberLiteral(context);
+                        }
+                    }
+
+                    // '1' - '9'
                 case Chars.One:
                 case Chars.Two:
                 case Chars.Three:
@@ -1082,27 +1108,6 @@ export class Parser {
     private scanNumber(context: Context, ch: Chars): Token {
 
         const start = this.index;
-
-        if (ch === Chars.Zero) {
-
-            ch = this.source.charCodeAt(this.index + 1);
-
-            if (ch === Chars.Backslash) this.error(Errors.Unexpected);
-
-            switch (ch) {
-                case Chars.LowerX:
-                case Chars.UpperX:
-                    return this.scanHexadecimalDigit();
-                case Chars.LowerB:
-                case Chars.UpperB:
-                    return this.scanBinaryDigits(context);
-                case Chars.LowerO:
-                case Chars.UpperO:
-                    return this.scanOctalDigits(context);
-                default:
-                    if (Chars.Zero <= ch && ch <= Chars.Seven) return this.scanNumberLiteral(context);
-            }
-        }
 
         this.skipDigits();
 
@@ -3718,6 +3723,8 @@ export class Parser {
             expression = false;
             body = this.parseFunctionBody(context & ~(Context.SimpleArrow | Context.Yield));
         } else {
+            // unset the flag here
+            this.flags &= ~Flags.Arrow;
             body = this.parseAssignmentExpression(context & ~(Context.SimpleArrow | Context.Yield) | Context.ConciseBody);
         }
 
