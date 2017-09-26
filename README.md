@@ -117,7 +117,7 @@ You can find the benchmarks [here](BENCHMARK.md)
 ## ESTree
 
 Cherow outputs a sensible syntax tree format as standardized by [ESTree project](https://github.com/estree/estree), and does
-not add any "extra" properties to any of it's nodes.
+not add any "extra" properties to any of its nodes.
 
 However. There is a small difference from other parsers because Cherow outputs a `await` property on the `ForStatement` node.
 This because of the `Asynchronous Iteration` implementation.
