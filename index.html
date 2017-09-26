@@ -1,2 +1,88 @@
 <!DOCTYPE html>
-Test page!
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cherow - A fast ECMAScript parser in JavaScript - Demo</title>
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+<style>
+h2 {
+  font-size: 16px;
+  font-weight: bold;
+}
+
+#input, #output {
+  width: 99%;
+  height: 300px;
+}
+
+.input-title {
+  border: 0 none;
+  margin-bottom: 12px;
+}
+
+.sub {
+  margin-top: 0.5em;
+}
+
+.footer {
+  margin-top: 1em;
+  margin-bottom: 2em;
+}
+
+.footer a {
+  font-weight: bold;
+}
+</style>
+</head>
+<body>
+  <div class="container">
+    <div class="row">
+      <div class="col-md-10">
+        <h1>Cherow - A fast ECMAScript parser in JavaScript</h1>
+        <h2>Cherow is a very fast, standard-compliant ECMAScript parser written in ECMAScript.
+          </h2>
+        <p>
+          It strictly follows the ECMAScript® 2018 Language Specification and should parse acc. these specifications
+        </p>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col-md-6">
+        <fieldset>
+          <legend class="input-title">Input</legend>
+          <textarea id="input" class="form-control" placeholder="Write JavaScript code here.">var a = 1;</textarea>
+          <div class="sub">
+            <label><input type="checkbox" id="range"> Index-based range</label>
+          </div>
+          <div>
+            <label><input type="checkbox" id="loc"> Line and column-based</label>
+          </div>
+        </fieldset>
+      </div>
+      <div class="input-title">
+        <fieldset>
+            <h2 ><a href="javascript:void(0)" data-method="parse">Syntax</a></h2>
+          <textarea id="output" class="form-control" readonly></textarea>
+          <div class="sub">
+            <label for="url" class="control-label">URL:</label>
+            <input type="text" class="form-control" id="url" value="" readonly>
+          </div>
+        </fieldset>
+      </div>
+    </div>
+    <div class="row footer">
+      <div class="col-md-10">
+        <a href="https://github.com/cherow/cherow">Repository in GitHub</a>
+      </div>
+    </div>
+  </div>
+  <script src="js/es5-shim.js"></script>
+  <script src="js/es5-sham.js"></script>
+  <script src="js/cherow.js"></script>
+  <script src="js/jquery.js"></script>
+  <script src="js/underscore.js"></script>
+  <script src="js/backbone.js"></script>
+  <script src="js/demo.js"></script>
+</body>
+</html>
