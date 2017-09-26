@@ -4,7 +4,6 @@ const expect = chai.expect;
 
 
 describe('Expressions - Function expression', () => {
-
     
     it('should fail on "function _13_0_4_5_fun() { eval = 42; };"', () => {
         expect(() => {
