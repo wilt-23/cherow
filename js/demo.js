@@ -22,11 +22,13 @@
       'paste #input': 'onInputChange',
       'change #input': 'onInputChange',
       'change #range': 'onRangeChange',
+      'change #next': 'onNextChange',
+      'change #raw': 'onRawChange',
       'change #loc': 'onLocChange',
       'click .output-tabs a': 'onTabClick'
     },
 
-    _options: { next: true, raw: true, jsx: true, v8: true },
+    _options: { jsx: true, v8: true },
     _timerId: null,
     _method: 'parse',
 
@@ -36,6 +38,8 @@
       this.$input = this.$el.find('#input');
       this.$output = this.$el.find('#output');
       this.$range = this.$el.find('#range');
+      this.$next = this.$el.find('#next');
+      this.$raw = this.$el.find('#raw');
       this.$loc = this.$el.find('#loc');
       this.$url = this.$el.find('#url');
       this.$outputTabs = this.$el.find('.output-tabs');
@@ -58,6 +62,14 @@
     },
     onRangeChange: function(event) {
       this._options.ranges = this.$range.prop('checked');
+      this.parse();
+    },
+    onNextChange: function(event) {
+      this._options.next = this.$next.prop('checked');
+      this.parse();
+    },
+    onRawChange: function(event) {
+      this._options.raw = this.$raw.prop('checked');
       this.parse();
     },
     onLocChange: function(event) {
@@ -106,7 +118,9 @@
         code: this.$input.val(),
         method: this._method,
         range: this._options.range,
-        loc: this._options.locations
+        loc: this._options.locations,
+        next: this._options.next,
+        raw: this._options.raw
       };
       var href = location.href.replace(/[?#].*$/, '');
       var url = href + '?' + Util.buildParams(params);
@@ -120,6 +134,13 @@
       if (params.locations === 'true') {
         this.$loc.prop('checked', true);
       }
+      if (params.raw === 'true') {
+        this.$raw.prop('checked', true);
+      }
+      if (params.next === 'true') {
+        this.$next.prop('checked', true);
+      }
+
       if (params.method) {
         this.changeTab(params.method);
       }

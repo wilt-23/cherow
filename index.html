@@ -2,8 +2,9 @@
 <html>
 <head>
 <meta charset="utf-8">
+<title>Cherow - A fast ECMAScript parser in JavaScript</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Cherow - A fast ECMAScript parser in JavaScript - Demo</title>
+
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
 <style>
 h2 {
@@ -14,6 +15,9 @@ h2 {
 #input, #output {
   width: 99%;
   height: 300px;
+  border-left: 3px solid #ddd;
+  padding: 0 0 0 8px;
+  
 }
 
 .input-title {
@@ -33,6 +37,8 @@ h2 {
 .footer a {
   font-weight: bold;
 }
+.footer sub {}
+
 </style>
 </head>
 <body>
@@ -40,32 +46,35 @@ h2 {
     <div class="row">
       <div class="col-md-10">
         <h1>Cherow - A fast ECMAScript parser in JavaScript</h1>
-        <h2>Cherow is a very fast, standard-compliant ECMAScript parser written in ECMAScript.
+        <h2>It strictly follows the ECMAScript® 2018 Language Specification.
           </h2>
-        <p>
-          It strictly follows the ECMAScript® 2018 Language Specification and should parse acc. these specifications
-        </p>
       </div>
     </div>
     <div class="row">
       <div class="col-md-6">
         <fieldset>
           <legend class="input-title">Input</legend>
-          <textarea id="input" class="form-control" placeholder="Write JavaScript code here.">function f({ x, y, ...z }) {}</textarea>
+          <textarea id="input" class="form-control" placeholder="Write JavaScript code here.">function yield() {}</textarea>
           <div class="sub">
             <label><input type="checkbox" id="range"> Index-based range</label>
           </div>
           <div>
             <label><input type="checkbox" id="loc"> Line and column-based</label>
           </div>
-        </fieldset>
+          <div>
+              <label><input type="checkbox" id="next"> Activate ECMAScript Next (Stage 3 proposals)</label>
+            </div>
+            <div>
+                <label><input type="checkbox" id="raw"> Activate Raw property on the node</label>
+              </div>
+          </fieldset>
       </div>
       <div class="input-title">
         <fieldset>
-            <h2 ><a href="javascript:void(0)" data-method="parse">Syntax</a></h2>
+            <legend class="input-title">Syntax</legend>
           <textarea id="output" class="form-control" readonly></textarea>
           <div class="sub">
-            <label for="url" class="control-label">URL:</label>
+            <label for="url" class="control-label">URL for this code:</label>
             <input type="text" class="form-control" id="url" value="" readonly>
           </div>
         </fieldset>
