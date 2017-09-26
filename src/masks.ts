@@ -1,14 +1,14 @@
 export const enum Context {
     None                   = 0,
-    Module                 = 1 << 0,   // If node was parse in module code
-    Strict                 = 1 << 1,   // If node was parse in strict mode
+    Module                 = 1 << 0,   // If node was parsed in module code
+    Strict                 = 1 << 1,   // If node was parsed in strict mode
     Statement              = 1 << 3,   // If node was parsed in a statement context
     JSXChild               = 1 << 4,   // If node was parsed in a JSX context and has JSX children
     HasConstructor         = 1 << 5,   // If node was parsed inside Class and allow super
     SimpleArrow            = 1 << 6,   // If node was parsed in a arrow context as plain identifier
     Arrow                  = 1 << 7,   // If node was parsed in a arrow context
     AsyncFunctionBody      = 1 << 8,   // If node was parsed in a async arrow body context
-    Concisebody            = 1 << 9,   // If node was parsed in a arrow body context with concise body
+    ConciseBody            = 1 << 9,   // If node was parsed in a arrow body context with concise body
     Parenthesis            = 1 << 10,  // If node was parsed in a parenthesized expression context
     Await                  = 1 << 11,  // If node was parsed in the 'await' context created when parsing an async function
     Yield                  = 1 << 12,  // If node was parsed in the 'yield' context created when parsing a generator
@@ -91,6 +91,7 @@ export const enum ObjectFlags {
     Computed        = 1 << 7,
     Super           = 1 << 8,
     Method          = 1 << 9,
+    Private         = 1 << 10,
 
     // Modifier in this case is either 'get or 'set'. 'static' and others are excluded from the community
     Modifier = Getter | Setter,

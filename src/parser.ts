@@ -3052,14 +3052,14 @@ export class Parser {
 
         // Valid: '(b = c) => d ? (e, f) : g;'
         // Invalid: '() => {} ? 1 : 2;'
-        if (!(context & Context.Concisebody) && this.flags & Flags.Arrow) return expression;
+        if (!(context & Context.ConciseBody) && this.flags & Flags.Arrow) return expression;
 
         this.nextToken(context);
 
-        const consequent = this.parseAssignmentExpression(context & ~Context.Concisebody);
+        const consequent = this.parseAssignmentExpression(context & ~Context.ConciseBody);
         this.expect(context, Token.Colon);
 
-        const alternate = this.parseAssignmentExpression(context & ~Context.Concisebody);
+        const alternate = this.parseAssignmentExpression(context & ~Context.ConciseBody);
 
         return this.finishNode(pos, {
             type: 'ConditionalExpression',
@@ -3718,7 +3718,7 @@ export class Parser {
             expression = false;
             body = this.parseFunctionBody(context & ~(Context.SimpleArrow | Context.Yield));
         } else {
-            body = this.parseAssignmentExpression(context & ~(Context.SimpleArrow | Context.Yield) | Context.Concisebody);
+            body = this.parseAssignmentExpression(context & ~(Context.SimpleArrow | Context.Yield) | Context.ConciseBody);
         }
 
         this.exitFunctionScope(savedScope);

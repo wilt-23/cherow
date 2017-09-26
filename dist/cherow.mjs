@@ -3287,12 +3287,12 @@ Parser.prototype.parseConditionalExpression = function parseConditionalExpressio
         { return expression; }
     // Valid: '(b = c) => d ? (e, f) : g;'
     // Invalid: '() => {} ? 1 : 2;'
-    if (!(context & 512 /* Concisebody */) && this.flags & 32768 /* Arrow */)
+    if (!(context & 512 /* ConciseBody */) && this.flags & 32768 /* Arrow */)
         { return expression; }
     this.nextToken(context);
-    var consequent = this.parseAssignmentExpression(context & ~512 /* Concisebody */);
+    var consequent = this.parseAssignmentExpression(context & ~512 /* ConciseBody */);
     this.expect(context, 21 /* Colon */);
-    var alternate = this.parseAssignmentExpression(context & ~512 /* Concisebody */);
+    var alternate = this.parseAssignmentExpression(context & ~512 /* ConciseBody */);
     return this.finishNode(pos, {
         type: 'ConditionalExpression',
         test: expression,
@@ -3908,7 +3908,7 @@ Parser.prototype.parseArrowExpression = function parseArrowExpression (context, 
         body = this.parseFunctionBody(context & ~(64 /* SimpleArrow */ | 4096 /* Yield */));
     }
     else {
-        body = this.parseAssignmentExpression(context & ~(64 /* SimpleArrow */ | 4096 /* Yield */) | 512 /* Concisebody */);
+        body = this.parseAssignmentExpression(context & ~(64 /* SimpleArrow */ | 4096 /* Yield */) | 512 /* ConciseBody */);
     }
     this.exitFunctionScope(savedScope);
     return this.finishNode(pos, {
