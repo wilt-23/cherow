@@ -3547,7 +3547,7 @@ Parser.prototype.parseParenthesizedExpression = function parseParenthesizedExpre
                 if (this$1.isEvalOrArguments(this$1.tokenValue))
                     { state |= 2 /* Reserved */; }
             }
-            expr.push(this$1.parseAssignmentExpression(context & ~16384 /* ForStatement */));
+            expr.push(this$1.parseAssignmentExpression(context & ~(16384 /* ForStatement */ | 1024 /* Parenthesis */)));
         }
     }
     // Save the 'SequenceExpression' end position before parsing out the right parenthesis
@@ -3908,12 +3908,11 @@ Parser.prototype.parseArrowExpression = function parseArrowExpression (context, 
         { params = this.parseArrowFormalList(context | 4194304 /* Binding */, params); }
     if (this.token === 65548 /* LeftBrace */) {
         expression = false;
-        body = this.parseFunctionBody(context & ~(64 /* SimpleArrow */ | 4096 /* Yield */));
+        body = this.parseFunctionBody(context & ~(64 /* SimpleArrow */ | 4096 /* Yield */ | 1024 /* Parenthesis */));
     }
     else {
-        // unset the flag here
         this.flags &= ~32768 /* Arrow */;
-        body = this.parseAssignmentExpression(context & ~(64 /* SimpleArrow */ | 4096 /* Yield */) | 512 /* ConciseBody */);
+        body = this.parseAssignmentExpression(context & ~(64 /* SimpleArrow */ | 4096 /* Yield */) | 512 /* ConciseBody */ | 1024 /* Parenthesis */);
     }
     this.exitFunctionScope(savedScope);
     return this.finishNode(pos, {
@@ -4450,7 +4449,7 @@ Parser.prototype.parsePrimaryExpression = function parsePrimaryExpression (conte
                 { return expr; }
             // Valid: 'async => 1'
             if (this.token === 10 /* Arrow */)
-                { return this.parseArrowExpression(context, pos, [expr]); }
+                { return this.parseArrowExpression(context &= ~1024 /* Parenthesis */, pos, [expr]); }
             // Invalid: 'async => {}'
             // Valid: 'async foo => {}'
             if (this.isIdentifier(context, this.token)) {
@@ -4466,7 +4465,7 @@ Parser.prototype.parsePrimaryExpression = function parsePrimaryExpression (conte
                 expr = this.parseIdentifier(context);
                 // Valid: 'async foo => {}'
                 if (this.token === 10 /* Arrow */)
-                    { return this.parseArrowExpression(context | 2048 /* Await */, pos, [expr]); }
+                    { return this.parseArrowExpression(context & ~1024 /* Parenthesis */ | 2048 /* Await */, pos, [expr]); }
                 // Invalid: 'async foo 7 {}'
                 // Invalid: 'async foo bar {}'
                 // Invalid: 'foo / {}'
@@ -4489,7 +4488,7 @@ Parser.prototype.parsePrimaryExpression = function parsePrimaryExpression (conte
             if (this.flags & 1 /* LineTerminator */)
                 { this.error(119 /* InvalidStrictLexical */); }
         default:
-            return this.parseIdentifierOrArrow(context, pos);
+            return this.parseIdentifierOrArrow(context &= ~1024 /* Parenthesis */, pos);
     }
 };
 // NOTE! By doing it this way we are about 67% faster than Esprima, and 83% faster

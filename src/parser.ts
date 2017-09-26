@@ -3346,7 +3346,7 @@ export class Parser {
                     // Invalid: '"use strict"; ((foo, arguments) => 1);'
                     if (this.isEvalOrArguments(this.tokenValue)) state |= ParenthesizedState.Reserved;
                 }
-                expr.push(this.parseAssignmentExpression(context & ~Context.ForStatement));
+                expr.push(this.parseAssignmentExpression(context & ~(Context.ForStatement | Context.Parenthesis)));
             }
         }
 
@@ -3721,11 +3721,10 @@ export class Parser {
 
         if (this.token === Token.LeftBrace) {
             expression = false;
-            body = this.parseFunctionBody(context & ~(Context.SimpleArrow | Context.Yield));
+            body = this.parseFunctionBody(context & ~(Context.SimpleArrow | Context.Yield | Context.Parenthesis));
         } else {
-            // unset the flag here
             this.flags &= ~Flags.Arrow;
-            body = this.parseAssignmentExpression(context & ~(Context.SimpleArrow | Context.Yield) | Context.ConciseBody);
+            body = this.parseAssignmentExpression(context & ~(Context.SimpleArrow | Context.Yield) | Context.ConciseBody | Context.Parenthesis);
         }
 
         this.exitFunctionScope(savedScope);
@@ -4342,7 +4341,7 @@ export class Parser {
                 // plain identifier
                 if (this.flags & Flags.LineTerminator) return expr;
                 // Valid: 'async => 1'
-                if (this.token === Token.Arrow) return this.parseArrowExpression(context, pos, [expr]);
+                if (this.token === Token.Arrow) return this.parseArrowExpression(context &= ~ Context.Parenthesis, pos, [expr]);
                 // Invalid: 'async => {}'
                 // Valid: 'async foo => {}'
                 if (this.isIdentifier(context, this.token)) {
@@ -4355,7 +4354,7 @@ export class Parser {
                     }
                     expr = this.parseIdentifier(context);
                     // Valid: 'async foo => {}'
-                    if (this.token === Token.Arrow) return this.parseArrowExpression(context | Context.Await, pos, [expr]);
+                    if (this.token === Token.Arrow) return this.parseArrowExpression(context & ~Context.Parenthesis | Context.Await, pos, [expr]);
                     // Invalid: 'async foo 7 {}'
                     // Invalid: 'async foo bar {}'
                     // Invalid: 'foo / {}'
@@ -4379,7 +4378,7 @@ export class Parser {
                 // fixes let let split across two lines
                 if (this.flags & Flags.LineTerminator) this.error(Errors.InvalidStrictLexical);
             default:
-                return this.parseIdentifierOrArrow(context, pos);
+                return this.parseIdentifierOrArrow(context &= ~ Context.Parenthesis, pos);
         }
     }
 
