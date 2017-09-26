@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="utf-8">
-<title>Cherow - A fast ECMAScript parser in JavaScript</title>
+<title>Cherow - A fast, Typescript-based Javascript parser</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
@@ -44,13 +44,22 @@ h2 {
 }
 .footer sub {}
 
+#onGithub {
+  float: right;
+  margin-top: 40px;
+  font-weight: bold;
+}
+
 </style>
 </head>
 <body>
   <div class="container">
+      <div id="onGithub">
+          <a href="https://github.com/cherow/cherow">Fork me on GitHub</a>
+        </div>
     <div class="row">
       <div class="col-md-10">
-        <h1>Cherow - A fast ECMAScript parser in JavaScript</h1>
+        <h1>Cherow - A fast, Typescript-based Javascript parser</h1>
         <h2>It strictly follows the ECMAScript® 2018 Language Specification.
           </h2>
       </div>
@@ -70,12 +79,15 @@ h2 {
             <label><input type="checkbox" id="loc"> Line and column-based</label>
           </div>
           <div>
-              <label><input type="checkbox" id="next"> Activate ECMAScript Next (Stage 3 proposals)</label>
+              <label><input type="checkbox" id="next"> ECMAScript Next (Stage 3 proposals)</label>
             </div>
             <div>
-                <label><input type="checkbox" id="raw"> Activate Raw property on the node</label>
+                <label><input type="checkbox" id="raw"> Raw property on the node</label>
               </div>
-          </fieldset>
+              <div>
+                  <label><input type="checkbox" id="jsx"> JSX</label>
+                </div>
+            </fieldset>
       </div>
       <div class="input-title">
         <fieldset>
@@ -88,11 +100,7 @@ h2 {
         </fieldset>
       </div>
     </div>
-    <div class="row footer">
-      <div class="col-md-10">
-        <a href="https://github.com/cherow/cherow">Repository in GitHub</a>
-      </div>
-    </div>
+   
   </div>
   <script src="js/es5-shim.js"></script>
   <script src="js/es5-sham.js"></script>

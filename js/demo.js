@@ -25,11 +25,12 @@
       'change #next': 'onNextChange',
       'change #raw': 'onRawChange',
       'change #loc': 'onLocChange',
+      'change #jsx': 'onJsxChange',
       'change #module': 'onModuleChange',
       'click .output-tabs a': 'onTabClick'
     },
 
-    _options: { jsx: true, v8: true },
+    _options: { v8: true },
     _timerId: null,
     _method: 'parse',
 
@@ -44,6 +45,7 @@
       this.$module = this.$el.find('#module');
       this.$loc = this.$el.find('#loc');
       this.$url = this.$el.find('#url');
+      this.$jsx = this.$el.find('#jsx');
       this.$outputTabs = this.$el.find('.output-tabs');
 
       EventBus.on('resize:window', this.onWindowResize);
@@ -53,6 +55,7 @@
       this.onNextChange();
       this.onRawChange();
       this.onModuleChange();
+      this.onJsxChange();
       this.parseURL();
       this.parse();
       this.$input.focus();
@@ -75,6 +78,10 @@
     },
     onRawChange: function(event) {
       this._options.raw = this.$raw.prop('checked');
+      this.parse();
+    },
+    onJsxChange: function(event) {
+      this._options.jsx = this.$jsx.prop('checked');
       this.parse();
     },
     onModuleChange: function(event) {
@@ -121,7 +128,8 @@
         loc: this._options.locations,
         next: this._options.next,
         module: this._options.module,
-        raw: this._options.raw
+        raw: this._options.raw,
+        jsx: this._options.jsx
       };
       var href = location.href.replace(/[?#].*$/, '');
       var url = href + '?' + Util.buildParams(params);
@@ -143,6 +151,10 @@
       }
       if (params.module === 'true') {
         this.$module.prop('checked', true);
+      }
+
+      if (params.jsx === 'true') {
+        this.$jsx.prop('checked', true);
       }
 
       if (params.method) {
