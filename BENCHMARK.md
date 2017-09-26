@@ -135,7 +135,60 @@ computerm and that these results are for the technically interested only.
 
 **yield: 1;**
 
+- Cherow x 687,718 ops/sec ±2.29% (88 runs sampled)
+- Esprima x ... (**Esprima can't parse this**)
+- Acorn x 122,125 ops/sec ±0.36% (93 runs sampled)
+- Fastest is Cherow
+
+
+### Babylon 
+
+This is a few micro-benchmarks to show the Babylon performance
+
+**{}**
+- Cherow x 5,649,401 ops/sec ±0.36% (94 runs sampled)
+- Esprima x 828,741 ops/sec ±0.83% (96 runs sampled)
+- Acorn x 135,638 ops/sec ±5.09% (84 runs sampled)
+- Babylon x 522,293 ops/sec ±2.97% (89 runs sampled)
+- Fastest is Cherow
+
+**class A{}**
+
+- Cherow  x 1,236,289 ops/sec ±1.51% (91 runs sampled)
+- Esprima x 464,939 ops/sec ±0.79% (95 runs sampled)
+- Acorn   x 122,513 ops/sec ±5.18% (86 runs sampled)
+- Babylon x 277,248 ops/sec ±7.14% (75 runs sampled)
+- Fastest is Cherow
+
+
+**() => abc**
+
+- Cherow  x 1,160,867 ops/sec ±3.76% (84 runs sampled)
+- Esprima x 538,062 ops/sec ±10.56% (79 runs sampled)
+- Acorn   x 114,162 ops/sec ±9.45% (82 runs sampled)
+- Babylon x 273,801 ops/sec ±7.12% (79 runs sampled)
+- Fastest is Cherow
+
+**(class extends 0{})**
+
+- Cherow  x 652,589 ops/sec ±13.75% (84 runs sampled)
+- Esprima x 338,062 ops/sec ±10.56% (78 runs sampled)
+- Acorn   x 89,142 ops/sec ±24.24% (79 runs sampled)
+- Babylon x 190,164 ops/sec ±5.08% (80 runs sampled)
+- Fastest is Cherow
+
+**({ if: 0 })**
+
+- Cherow  x 512,595 ops/sec ±49.82% (84 runs sampled)
+- Esprima x 338,012 ops/sec ±10.56% (71 runs sampled)
+- Acorn   x 98,883 ops/sec ±11.21% (76 runs sampled)
+- Babylon x 169,632 ops/sec ±9.19% (78 runs sampled)
+- Fastest is Cherow
+
+**yield: 1;**
+
 - Cherow x 592,534 ops/sec ±1.06% (95 runs sampled)
 - Esprima x ... (**Esprima can't parse this**)
 - Acorn x 122,125 ops/sec ±0.36% (93 runs sampled)
+- Babylon x ... (**pos: 5,loc: [object Object]**)
 - Fastest is Cherow
