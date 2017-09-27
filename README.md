@@ -7,6 +7,8 @@ It strictly follows the ECMAScript® 2018 Language Specification and should pars
 
 It's safe to use in production.
 
+**Note!** if you find a bug, open a issue ticket and we will try our best to solve it within 30 - 60 minutes. 
+
 A online demo can be found [here](https://cherow.github.io/cherow/).
 
 ## Features 
