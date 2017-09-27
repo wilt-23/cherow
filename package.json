@@ -26,6 +26,7 @@
     "minify": "rollup -c rollup.config.min.js",
     "test": "mocha test/specs/**/*.ts -R spec --bail",
     "coverage": "npm run clean:build && npm run pretest && node --harmony ./node_modules/istanbul/lib/cli.js cover --root ./build/src --report lcov --report text ./node_modules/mocha/bin/_mocha ./build/test/**/*.js",
+    "post_coverage": "cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js",
     "clean": "rimraf dist build coverage",
     "clean:build": "rimraf build",
     "debug": "npm-run-all clean pretest",
