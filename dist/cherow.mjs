@@ -72,26 +72,6 @@ function getQualifiedJSXName(object) {
     }
     throw new TypeError('Unexpected JSX object');
 }
-/**
- * Check if this can be used in an update expression
- *
- * @param t Token
- * @param flags Flags
- */
-function isUunaryExpression(t) {
-    switch (t) {
-        case 3148079 /* Add */:
-        case 3148080 /* Subtract */:
-        case 2097198 /* Complement */:
-        case 2097197 /* Negate */:
-        case 2109483 /* DeleteKeyword */:
-        case 2109482 /* TypeofKeyword */:
-        case 2109484 /* VoidKeyword */:
-            return true;
-        default:
-            return false;
-    }
-}
 function isStartOfExpression(t, inJSXContext) {
     switch (t) {
         case 131073 /* Identifier */:
@@ -3218,12 +3198,15 @@ Parser.prototype.parseUnaryExpression = function parseUnaryExpression (context) 
     }
     if (context & 2048 /* Await */ && this.token === 2162797 /* AwaitKeyword */)
         { return this.parseAwaitExpression(context, pos); }
-    var parseSimpleUnaryExpression = this.parseSimpleUnaryExpression(context);
+    var expr = this.parseSimpleUnaryExpression(context);
+    if (context & 2 /* Strict */ && expr.operator === 'delete' && expr.argument.type === 'Identifier') {
+        this.error(52 /* StrictDelete */);
+    }
     switch (this.token) {
         case 1051446 /* Exponentiate */:
             this.error(0 /* Unexpected */);
         default:
-            return parseSimpleUnaryExpression;
+            return expr;
     }
 };
 /**
@@ -3233,15 +3216,23 @@ Parser.prototype.parseUnaryExpression = function parseUnaryExpression (context) 
  */
 Parser.prototype.parseSimpleUnaryExpression = function parseSimpleUnaryExpression (context) {
     var pos = this.getLocations();
-    if (isUunaryExpression(this.token)) {
-        var token = this.token;
-        this.nextToken(context);
-        return this.finishNode(pos, {
-            type: 'UnaryExpression',
-            operator: tokenDesc(token),
-            argument: this.parseSimpleUnaryExpression(context),
-            prefix: true
-        });
+    switch (this.token) {
+        case 2109483 /* DeleteKeyword */:
+        case 3148079 /* Add */:
+        case 3148080 /* Subtract */:
+        case 2097198 /* Complement */:
+        case 2097197 /* Negate */:
+        case 2109482 /* TypeofKeyword */:
+        case 2109484 /* VoidKeyword */:
+            var token = this.token;
+            this.nextToken(context);
+            return this.finishNode(pos, {
+                type: 'UnaryExpression',
+                operator: tokenDesc(token),
+                argument: this.parseSimpleUnaryExpression(context),
+                prefix: true
+            });
+        default: // ignore
     }
     return this.parseUpdateExpression(context, pos);
 };

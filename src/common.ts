@@ -84,27 +84,6 @@ export function getQualifiedJSXName(object: any): string {
     throw new TypeError('Unexpected JSX object');
 }
 
-/**
- * Check if this can be used in an update expression
- *
- * @param t Token
- * @param flags Flags
- */
-export function isUunaryExpression(t: Token): boolean {
-    switch (t) {
-        case Token.Add:
-        case Token.Subtract:
-        case Token.Complement:
-        case Token.Negate:
-        case Token.DeleteKeyword:
-        case Token.TypeofKeyword:
-        case Token.VoidKeyword:
-            return true;
-        default:
-            return false;
-    }
-}
-
 export function isStartOfExpression(t: Token, inJSXContext: boolean): boolean {
     switch (t) {
         case Token.Identifier:

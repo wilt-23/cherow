@@ -7,8 +7,14 @@ describe('Espressions - Unary', () => {
 
     it('should fail on ""use strict"; delete ((a));"', () => {
         expect(() => {
-            parseModule('"use strict"; delete ((a));');
-        }).to.not.throw();
+            parseScript('"use strict"; delete ((a));');
+        }).to.throw();
+      });
+
+      it('should fail on ""use strict"; delete ((a));"', () => {
+        expect(() => {
+            parseScript('(function() { "use strict"; var a; delete a; })()');
+        }).to.throw();
       });
 
       it('should parse "-null"', () => {

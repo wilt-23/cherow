@@ -1,6 +1,6 @@
 import { Chars } from './chars';
 import * as ESTree from './estree';
-import { isKeyword, isDigit, hasOwn, toHex, tryCreate, fromCodePoint, hasMask, isUunaryExpression, isValidDestructuringAssignmentTarget, isDirective, getQualifiedJSXName, isStartOfExpression, isValidSimpleAssignmentTarget } from './common';
+import { isKeyword, isDigit, hasOwn, toHex, tryCreate, fromCodePoint, hasMask, isValidDestructuringAssignmentTarget, isDirective, getQualifiedJSXName, isStartOfExpression, isValidSimpleAssignmentTarget } from './common';
 import { Flags, Context, ScopeMasks, RegExpState, ObjectFlags, RegExpFlag, ParenthesizedState, IterationState } from './masks';
 import { createError, Errors } from './errors';
 import { Token, tokenDesc, descKeyword } from './token';
@@ -3078,13 +3078,17 @@ export class Parser {
 
         if (context & Context.Await && this.token === Token.AwaitKeyword) return this.parseAwaitExpression(context, pos);
 
-        const parseSimpleUnaryExpression = this.parseSimpleUnaryExpression(context);
+        const expr: any = this.parseSimpleUnaryExpression(context);
+
+        if (context & Context.Strict && expr.operator === 'delete' && expr.argument.type === 'Identifier') {
+            this.error(Errors.StrictDelete);
+        }
 
         switch (this.token) {
             case Token.Exponentiate:
                 this.error(Errors.Unexpected);
             default:
-                return parseSimpleUnaryExpression;
+                return expr;
         }
     }
 
@@ -3094,24 +3098,31 @@ export class Parser {
      * @param context Context
      */
     private parseSimpleUnaryExpression(context: Context): ESTree.Expression {
+        
+                        const pos = this.getLocations();
+        
+                        switch (this.token) {
+                            case Token.DeleteKeyword:
+                            case Token.Add:
+                            case Token.Subtract:
+                            case Token.Complement:
+                            case Token.Negate:
+                            case Token.TypeofKeyword:
+                            case Token.VoidKeyword:
+                                const token = this.token;
+                                this.nextToken(context);
+                                return this.finishNode(pos, {
+                                    type: 'UnaryExpression',
+                                    operator: tokenDesc(token),
+                                    argument: this.parseSimpleUnaryExpression(context),
+                                    prefix: true
+                                });
+                            default: // ignore
+                       
+                        }
 
-        const pos = this.getLocations();
-
-        if (isUunaryExpression(this.token)) {
-
-            const token = this.token;
-
-            this.nextToken(context);
-
-            return this.finishNode(pos, {
-                type: 'UnaryExpression',
-                operator: tokenDesc(token),
-                argument: this.parseSimpleUnaryExpression(context),
-                prefix: true
-            });
-        }
-        return this.parseUpdateExpression(context, pos);
-    }
+                        return this.parseUpdateExpression(context, pos);
+                }
 
     private parseAwaitExpression(context: Context, pos: Location): ESTree.AwaitExpression {
 
