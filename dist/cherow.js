@@ -3193,19 +3193,37 @@ Parser.prototype.getBinaryPrecedence = function getBinaryPrecedence (context) {
 };
 Parser.prototype.parseUnaryExpression = function parseUnaryExpression (context) {
     var pos = this.getLocations();
-    if (!hasMask(this.token, 2097152 /* UnaryOperator */) && !(this.token === 1050431 /* LessThan */ && this.flags & 1048576 /* OptionsJSX */)) {
-        var incrementExpression = this.parseUpdateExpression(context, pos);
-        switch (this.token) {
-            case 1051446 /* Exponentiate */:
-                return this.parseBinaryExpression(context, this.getBinaryPrecedence(context), pos, incrementExpression);
-            default:
-                return incrementExpression;
-        }
+    if (!hasMask(this.token, 2097152 /* UnaryOperator */)) {
+        var updateExpression = this.parseUpdateExpression(context, pos);
+        if (this.token !== 1051446 /* Exponentiate */)
+            { return updateExpression; }
+        return this.parseBinaryExpression(context, this.getBinaryPrecedence(context), pos, updateExpression);
     }
-    if (context & 2048 /* Await */ && this.token === 2162797 /* AwaitKeyword */)
-        { return this.parseAwaitExpression(context, pos); }
-    var expr = this.parseSimpleUnaryExpression(context);
-    if (context & 2 /* Strict */ && expr.operator === 'delete' && expr.argument.type === 'Identifier') {
+    var expr;
+    var token = this.token;
+    switch (this.token) {
+        case 2109483 /* DeleteKeyword */:
+        case 3148079 /* Add */:
+        case 3148080 /* Subtract */:
+        case 2097198 /* Complement */:
+        case 2097197 /* Negate */:
+        case 2109482 /* TypeofKeyword */:
+        case 2109484 /* VoidKeyword */:
+            this.nextToken(context);
+            expr = this.finishNode(pos, {
+                type: 'UnaryExpression',
+                operator: tokenDesc(token),
+                argument: this.parseSimpleUnaryExpression(context),
+                prefix: true
+            });
+            break;
+        case 2162797 /* AwaitKeyword */:
+            if (context & 2048 /* Await */)
+                { return this.parseAwaitExpression(context, pos); }
+        default:
+            expr = this.parseUpdateExpression(context, pos);
+    }
+    if (context & 2 /* Strict */ && token === 2109483 /* DeleteKeyword */ && expr.argument.type === 'Identifier') {
         this.error(52 /* StrictDelete */);
     }
     if (this.token === 1051446 /* Exponentiate */)

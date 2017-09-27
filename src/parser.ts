@@ -3064,22 +3064,39 @@ export class Parser {
 
         const pos = this.getLocations();
 
-        if (!hasMask(this.token, Token.UnaryOperator) && !(this.token === Token.LessThan && this.flags & Flags.OptionsJSX)) {
-            const incrementExpression = this.parseUpdateExpression(context, pos);
-
-            switch (this.token) {
-                case Token.Exponentiate:
-                    return this.parseBinaryExpression(context, this.getBinaryPrecedence(context), pos, incrementExpression);
-                default:
-                    return incrementExpression;
-            }
+        if (!hasMask(this.token, Token.UnaryOperator)) {
+            const updateExpression = this.parseUpdateExpression(context, pos);
+            if (this.token !== Token.Exponentiate) return updateExpression;
+            return this.parseBinaryExpression(context, this.getBinaryPrecedence(context), pos, updateExpression);
         }
 
-        if (context & Context.Await && this.token === Token.AwaitKeyword) return this.parseAwaitExpression(context, pos);
+        let expr;
 
-        const expr: any = this.parseSimpleUnaryExpression(context);
+        const token = this.token;
 
-        if (context & Context.Strict && expr.operator === 'delete' && expr.argument.type === 'Identifier') {
+        switch (this.token) {
+            case Token.DeleteKeyword:
+            case Token.Add:
+            case Token.Subtract:
+            case Token.Complement:
+            case Token.Negate:
+            case Token.TypeofKeyword:
+            case Token.VoidKeyword:
+                this.nextToken(context);
+                expr = this.finishNode(pos, {
+                    type: 'UnaryExpression',
+                    operator: tokenDesc(token),
+                    argument: this.parseSimpleUnaryExpression(context),
+                    prefix: true
+                });
+                break;
+            case Token.AwaitKeyword:
+                if (context & Context.Await) return this.parseAwaitExpression(context, pos);
+            default:
+                expr = this.parseUpdateExpression(context, pos);
+        }
+
+        if (context & Context.Strict && token === Token.DeleteKeyword && expr.argument.type === 'Identifier') {
             this.error(Errors.StrictDelete);
         }
 
@@ -3119,9 +3136,7 @@ export class Parser {
     }
 
     private parseAwaitExpression(context: Context, pos: Location): ESTree.AwaitExpression {
-
         this.expect(context, Token.AwaitKeyword);
-
         const argument = this.parseSimpleUnaryExpression(context);
         return this.finishNode(pos, {
             type: 'AwaitExpression',
