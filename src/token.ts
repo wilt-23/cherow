@@ -10,7 +10,11 @@ export const enum Token {
     Reserved        = 1 << 13,
     FutureReserved  = 1 << 14,
     BindingPattern  = 1 << 16,
-
+    UpdateOperator  = 1 << 17,
+    AssignOperator   = 1 << 18,
+    BinaryOperator    = 1 << 19,
+    UnaryOperator    = 1 << 20,
+ 
     /* Node types */
     EndOfSource = 0, // Pseudo
 
@@ -47,54 +51,54 @@ export const enum Token {
     JSXAutoClose = 26, // />
 
     /* Update operators */
-    Increment = 27, // ++
-    Decrement = 28, // --
+    Increment = 27 | UpdateOperator, // ++
+    Decrement = 28 | UpdateOperator, // --
 
     /* Assign operators */
-    Assign                  = 29, // =
-    ShiftLeftAssign         = 30, // <<=
-    ShiftRightAssign        = 31, // >>=
-    LogicalShiftRightAssign = 32, // >>>=
-    ExponentiateAssign      = 33, // **=
-    AddAssign               = 34, // +=
-    SubtractAssign          = 35, // -=
-    MultiplyAssign          = 36, // *=
-    DivideAssign            = 37, // /=
-    ModuloAssign            = 38, // %=
-    BitwiseXorAssign        = 39, // ^=
-    BitwiseOrAssign         = 40, // |=
-    BitwiseAndAssign        = 41, // &=
+    Assign                  = 29 | AssignOperator, // =
+    ShiftLeftAssign         = 30 | AssignOperator, // <<=
+    ShiftRightAssign        = 31 | AssignOperator, // >>=
+    LogicalShiftRightAssign = 32 | AssignOperator, // >>>=
+    ExponentiateAssign      = 33 | AssignOperator, // **=
+    AddAssign               = 34 | AssignOperator, // +=
+    SubtractAssign          = 35 | AssignOperator, // -=
+    MultiplyAssign          = 36 | AssignOperator, // *=
+    DivideAssign            = 37 | AssignOperator, // /=
+    ModuloAssign            = 38 | AssignOperator, // %=
+    BitwiseXorAssign        = 39 | AssignOperator, // ^=
+    BitwiseOrAssign         = 40 | AssignOperator, // |=
+    BitwiseAndAssign        = 41 | AssignOperator, // &=
 
     /* Unary/binary operators */
-    TypeofKeyword      = 42 | Reserved,
-    DeleteKeyword      = 43 | Reserved,
-    VoidKeyword        = 44 | Reserved,
-    Negate             = 45, // !
-    Complement         = 46, // ~
-    Add                = 47 | 9 << PrecStart, // +
-    Subtract           = 48 | 9 << PrecStart, // -
-    InKeyword          = 49 | 7 << PrecStart | Reserved,
-    InstanceofKeyword  = 50 | 7 << PrecStart | Reserved,
-    Multiply           = 51 | 10 << PrecStart, // *
-    Modulo             = 52 | 10 << PrecStart, // %
-    Divide             = 53 | 10 << PrecStart, // /
-    Exponentiate       = 54 | 11 << PrecStart, // **
-    LogicalAnd         = 55 | 2 << PrecStart, // &&
-    LogicalOr          = 56 | 1 << PrecStart, // ||
-    StrictEqual        = 57 | 6 << PrecStart, // ===
-    StrictNotEqual     = 58 | 6 << PrecStart, // !==
-    LooseEqual         = 59 | 6 << PrecStart, // ==
-    LooseNotEqual      = 60 | 6 << PrecStart, // !=
-    LessThanOrEqual    = 61 | 7 << PrecStart, // <=
-    GreaterThanOrEqual = 62 | 7 << PrecStart, // >=
-    LessThan           = 63 | 7 << PrecStart, // <
-    GreaterThan        = 64 | 7 << PrecStart, // >
-    ShiftLeft          = 65 | 8 << PrecStart, // <<
-    ShiftRight         = 66 | 8 << PrecStart, // >>
-    LogicalShiftRight  = 67 | 8 << PrecStart, // >>>
-    BitwiseAnd         = 68 | 5 << PrecStart, // &
-    BitwiseOr          = 69 | 3 << PrecStart, // |
-    BitwiseXor         = 70 | 4 << PrecStart, // ^
+    TypeofKeyword      = 42 | UnaryOperator | Reserved,
+    DeleteKeyword      = 43 | UnaryOperator | Reserved,
+    VoidKeyword        = 44 | UnaryOperator | Reserved,
+    Negate             = 45 | UnaryOperator, // !
+    Complement         = 46 | UnaryOperator, // ~
+    Add                = 47 | UnaryOperator | BinaryOperator | 9 << PrecStart, // +
+    Subtract           = 48 | UnaryOperator | BinaryOperator | 9 << PrecStart, // -
+    InKeyword          = 49 | BinaryOperator | 7 << PrecStart | Reserved,
+    InstanceofKeyword  = 50 | BinaryOperator | 7 << PrecStart | Reserved,
+    Multiply           = 51 | BinaryOperator | 10 << PrecStart, // *
+    Modulo             = 52 | BinaryOperator | 10 << PrecStart, // %
+    Divide             = 53 | BinaryOperator | 10 << PrecStart, // /
+    Exponentiate       = 54 | BinaryOperator | 11 << PrecStart, // **
+    LogicalAnd         = 55 | BinaryOperator | 2 << PrecStart, // &&
+    LogicalOr          = 56 | BinaryOperator | 1 << PrecStart, // ||
+    StrictEqual        = 57 | BinaryOperator | 6 << PrecStart, // ===
+    StrictNotEqual     = 58 | BinaryOperator | 6 << PrecStart, // !==
+    LooseEqual         = 59 | BinaryOperator | 6 << PrecStart, // ==
+    LooseNotEqual      = 60 | BinaryOperator | 6 << PrecStart, // !=
+    LessThanOrEqual    = 61 | BinaryOperator | 7 << PrecStart, // <=
+    GreaterThanOrEqual = 62 | BinaryOperator | 7 << PrecStart, // >=
+    LessThan           = 63 | BinaryOperator | 7 << PrecStart, // <
+    GreaterThan        = 64 | BinaryOperator | 7 << PrecStart, // >
+    ShiftLeft          = 65 | BinaryOperator | 8 << PrecStart, // <<
+    ShiftRight         = 66 | BinaryOperator | 8 << PrecStart, // >>
+    LogicalShiftRight  = 67 | BinaryOperator | 8 << PrecStart, // >>>
+    BitwiseAnd         = 68 | BinaryOperator | 5 << PrecStart, // &
+    BitwiseOr          = 69 | BinaryOperator | 3 << PrecStart, // |
+    BitwiseXor         = 70 | BinaryOperator | 4 << PrecStart, // ^
 
     /* Variable declaration kinds */
     VarKeyword   = 71 | Reserved,
@@ -141,14 +145,14 @@ export const enum Token {
     /* Contextual keywords */
     AsKeyword          = 107 | Contextual,
     AsyncKeyword       = 108 | Contextual,
-    AwaitKeyword       = 109 | Contextual,
+    AwaitKeyword       = 109 | UnaryOperator | Contextual,
     ConstructorKeyword = 110 | Contextual,
     GetKeyword         = 111 | Contextual,
     SetKeyword         = 112 | Contextual,
     FromKeyword        = 113 | Contextual,
     OfKeyword          = 114 | Contextual,
 
-    EnumKeyword        = 115 | Reserved,
+    EnumKeyword        = 115 | Reserved,    
 }
 
 const KeywordDescTable = [

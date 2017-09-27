@@ -130,38 +130,6 @@ export function isUunaryExpression(t: Token): boolean {
     }
 }
 
-export function isBinaryOperator(t: Token): boolean {
-    switch (t) {
-        case Token.Add:
-        case Token.Subtract:
-        case Token.InKeyword:
-        case Token.InstanceofKeyword:
-        case Token.Multiply:
-        case Token.Modulo:
-        case Token.Divide:
-        case Token.Exponentiate:
-        case Token.LogicalAnd:
-        case Token.LogicalOr:
-        case Token.StrictEqual:
-        case Token.StrictNotEqual:
-        case Token.LooseEqual:
-        case Token.LooseNotEqual:
-        case Token.LessThanOrEqual:
-        case Token.GreaterThanOrEqual:
-        case Token.LessThan:
-        case Token.GreaterThan:
-        case Token.ShiftLeft:
-        case Token.ShiftRight:
-        case Token.LogicalShiftRight:
-        case Token.BitwiseAnd:
-        case Token.BitwiseOr:
-        case Token.BitwiseXor:
-            return true;
-        default:
-            return false;
-    }
-}
-
 export function isStartOfExpression(t: Token, inJSXContext: boolean): boolean {
     switch (t) {
         case Token.Identifier:
@@ -203,29 +171,6 @@ export function isStartOfExpression(t: Token, inJSXContext: boolean): boolean {
     }
 }
 
-export function isStartOfStatement(t: Token): boolean {
-    switch (t) {
-        case Token.ThrowKeyword:
-        case Token.TryKeyword:
-        case Token.WhileKeyword:
-        case Token.WithKeyword:
-        case Token.FunctionKeyword:
-        case Token.IfKeyword:
-        case Token.ForKeyword:
-        case Token.ExportKeyword:
-        case Token.DoKeyword:
-        case Token.DebuggerKeyword:
-        case Token.ContinueKeyword:
-        case Token.CatchKeyword:
-        case Token.BreakKeyword:
-        case Token.VarKeyword:
-        case Token.LetKeyword:
-        case Token.ConstKeyword:
-            return true;
-        default:
-            return this.isStartOfExpression(t);
-    }
-}
 export function isValidDestructuringAssignmentTarget(expr: Expression | Pattern): boolean {
     switch (expr.type) {
         case 'Identifier':
@@ -249,27 +194,6 @@ export function isValidSimpleAssignmentTarget(expr: Expression | Pattern): boole
     switch (expr.type) {
         case 'Identifier':
         case 'MemberExpression':
-            return true;
-        default:
-            return false;
-    }
-}
-
-export function isAssignmentOperator(t: Token): boolean {
-    switch (t) {
-        case Token.ShiftLeftAssign:
-        case Token.ShiftRightAssign:
-        case Token.LogicalShiftRightAssign:
-        case Token.ExponentiateAssign:
-        case Token.Assign:
-        case Token.AddAssign:
-        case Token.SubtractAssign:
-        case Token.MultiplyAssign:
-        case Token.DivideAssign:
-        case Token.ModuloAssign:
-        case Token.BitwiseXorAssign:
-        case Token.BitwiseOrAssign:
-        case Token.BitwiseAndAssign:
             return true;
         default:
             return false;

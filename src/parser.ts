@@ -1,6 +1,6 @@
 import { Chars } from './chars';
 import * as ESTree from './estree';
-import { isKeyword, isAssignmentOperator, isDigit, hasOwn, toHex, tryCreate, fromCodePoint, hasMask, isUpdateExpression, isBinaryOperator, isUunaryExpression, isValidDestructuringAssignmentTarget, isDirective, getQualifiedJSXName, isStartOfExpression, isStartOfStatement, isValidSimpleAssignmentTarget } from './common';
+import { isKeyword, isDigit, hasOwn, toHex, tryCreate, fromCodePoint, hasMask, isUpdateExpression, isUunaryExpression, isValidDestructuringAssignmentTarget, isDirective, getQualifiedJSXName, isStartOfExpression, isValidSimpleAssignmentTarget } from './common';
 import { Flags, Context, ScopeMasks, RegExpState, ObjectFlags, RegExpFlag, ParenthesizedState, IterationState } from './masks';
 import { createError, Errors } from './errors';
 import { Token, tokenDesc, descKeyword } from './token';
@@ -3011,7 +3011,7 @@ export class Parser {
 
         const expr: ESTree.Expression = this.parseBinaryExpression(context, 0, pos);
 
-        if (isAssignmentOperator(this.token)) {
+        if (hasMask(this.token, Token.AssignOperator)) {
             const operator = this.token;
             if (context & Context.Strict && this.isEvalOrArguments((expr as ESTree.Identifier).name)) {
                 this.error(Errors.StrictLHSAssignment);
@@ -3055,27 +3055,17 @@ export class Parser {
         });
     }
 
-    /**
-     * Get binary precedence
-     *
-     * @param context Context
-     */
     private getBinaryPrecedence(context: Context): any {
-        if (isBinaryOperator(this.token)) return this.token & Token.Precedence;
-        if (!(context & Context.AllowIn) && this.token & Token.InKeyword) return 0;
+        if (hasMask(this.token, Token.BinaryOperator)) return this.token & Token.Precedence;
         return 0;
     }
 
-    /**
-     * Parse unary expression
-     *
-     * @param context Context
-     */
     private parseUnaryExpression(context: Context): ESTree.UnaryExpression | ESTree.Expression {
 
         const pos = this.getLocations();
 
-        if (isUpdateExpression(this.token, this.flags)) {
+        if (!hasMask(this.token, Token.UnaryOperator) && !(this.token === Token.LessThan && this.flags & Flags.OptionsJSX)) {
+
             const incrementExpression = this.parseUpdateExpression(context, pos);
 
             switch (this.token) {
@@ -3179,7 +3169,7 @@ export class Parser {
 
     private parseUpdateExpression(context: Context, pos: Location): ESTree.Expression {
         let argument: any;
-        if (this.token === Token.Increment || this.token === Token.Decrement) {
+        if (hasMask(this.token, Token.UpdateOperator)) {
 
             const operator = this.token;
 
