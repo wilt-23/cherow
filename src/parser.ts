@@ -3065,7 +3065,6 @@ export class Parser {
         const pos = this.getLocations();
 
         if (!hasMask(this.token, Token.UnaryOperator) && !(this.token === Token.LessThan && this.flags & Flags.OptionsJSX)) {
-
             const incrementExpression = this.parseUpdateExpression(context, pos);
 
             switch (this.token) {
@@ -3084,12 +3083,9 @@ export class Parser {
             this.error(Errors.StrictDelete);
         }
 
-        switch (this.token) {
-            case Token.Exponentiate:
-                this.error(Errors.Unexpected);
-            default:
-                return expr;
-        }
+        if (this.token === Token.Exponentiate) this.error(Errors.Unexpected);
+
+        return expr;
     }
 
     /**
@@ -3098,31 +3094,29 @@ export class Parser {
      * @param context Context
      */
     private parseSimpleUnaryExpression(context: Context): ESTree.Expression {
-        
-                        const pos = this.getLocations();
-        
-                        switch (this.token) {
-                            case Token.DeleteKeyword:
-                            case Token.Add:
-                            case Token.Subtract:
-                            case Token.Complement:
-                            case Token.Negate:
-                            case Token.TypeofKeyword:
-                            case Token.VoidKeyword:
-                                const token = this.token;
-                                this.nextToken(context);
-                                return this.finishNode(pos, {
-                                    type: 'UnaryExpression',
-                                    operator: tokenDesc(token),
-                                    argument: this.parseSimpleUnaryExpression(context),
-                                    prefix: true
-                                });
-                            default: // ignore
-                       
-                        }
 
-                        return this.parseUpdateExpression(context, pos);
-                }
+        const pos = this.getLocations();
+
+        switch (this.token) {
+            case Token.DeleteKeyword:
+            case Token.Add:
+            case Token.Subtract:
+            case Token.Complement:
+            case Token.Negate:
+            case Token.TypeofKeyword:
+            case Token.VoidKeyword:
+                const token = this.token;
+                this.nextToken(context);
+                return this.finishNode(pos, {
+                    type: 'UnaryExpression',
+                    operator: tokenDesc(token),
+                    argument: this.parseSimpleUnaryExpression(context),
+                    prefix: true
+                });
+            default:
+                return this.parseUpdateExpression(context, pos);
+        }
+    }
 
     private parseAwaitExpression(context: Context, pos: Location): ESTree.AwaitExpression {
 

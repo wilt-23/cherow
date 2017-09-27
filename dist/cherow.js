@@ -3208,12 +3208,9 @@ Parser.prototype.parseUnaryExpression = function parseUnaryExpression (context) 
     if (context & 2 /* Strict */ && expr.operator === 'delete' && expr.argument.type === 'Identifier') {
         this.error(52 /* StrictDelete */);
     }
-    switch (this.token) {
-        case 1051446 /* Exponentiate */:
-            this.error(0 /* Unexpected */);
-        default:
-            return expr;
-    }
+    if (this.token === 1051446 /* Exponentiate */)
+        { this.error(0 /* Unexpected */); }
+    return expr;
 };
 /**
  * Build unary expressions
@@ -3238,9 +3235,9 @@ Parser.prototype.parseSimpleUnaryExpression = function parseSimpleUnaryExpressio
                 argument: this.parseSimpleUnaryExpression(context),
                 prefix: true
             });
-        default: // ignore
+        default:
+            return this.parseUpdateExpression(context, pos);
     }
-    return this.parseUpdateExpression(context, pos);
 };
 Parser.prototype.parseAwaitExpression = function parseAwaitExpression (context, pos) {
     this.expect(context, 2162797 /* AwaitKeyword */);
