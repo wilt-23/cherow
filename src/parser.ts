@@ -3063,46 +3063,23 @@ export class Parser {
     private parseUnaryExpression(context: Context): ESTree.UnaryExpression | ESTree.Expression {
 
         const pos = this.getLocations();
+        let expr: any;
 
-        if (!hasMask(this.token, Token.UnaryOperator)) {
-            const updateExpression = this.parseUpdateExpression(context, pos);
-            if (this.token !== Token.Exponentiate) return updateExpression;
-            return this.parseBinaryExpression(context, this.getBinaryPrecedence(context), pos, updateExpression);
+        if (hasMask(this.token, Token.UnaryOperator)) {
+
+            if (context & Context.Await && this.token === Token.AwaitKeyword) return this.parseAwaitExpression(context, pos);
+            const token = this.token;
+            expr = this.parseSimpleUnaryExpression(context);
+            if (context & Context.Strict && token === Token.DeleteKeyword && expr.argument.type === 'Identifier') {
+                this.error(Errors.StrictDelete);
+            }
+            if (this.token === Token.Exponentiate) this.error(Errors.Unexpected);
+        } else {
+            expr = this.parseUpdateExpression(context, pos);
         }
 
-        let expr;
-
-        const token = this.token;
-
-        switch (this.token) {
-            case Token.DeleteKeyword:
-            case Token.Add:
-            case Token.Subtract:
-            case Token.Complement:
-            case Token.Negate:
-            case Token.TypeofKeyword:
-            case Token.VoidKeyword:
-                this.nextToken(context);
-                expr = this.finishNode(pos, {
-                    type: 'UnaryExpression',
-                    operator: tokenDesc(token),
-                    argument: this.parseSimpleUnaryExpression(context),
-                    prefix: true
-                });
-                break;
-            case Token.AwaitKeyword:
-                if (context & Context.Await) return this.parseAwaitExpression(context, pos);
-            default:
-                expr = this.parseUpdateExpression(context, pos);
-        }
-
-        if (context & Context.Strict && token === Token.DeleteKeyword && expr.argument.type === 'Identifier') {
-            this.error(Errors.StrictDelete);
-        }
-
-        if (this.token === Token.Exponentiate) this.error(Errors.Unexpected);
-
-        return expr;
+        if (this.token !== Token.Exponentiate) return expr;
+        return this.parseBinaryExpression(context, this.getBinaryPrecedence(context), pos, expr);
     }
 
     /**
