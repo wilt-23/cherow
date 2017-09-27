@@ -1,6 +1,6 @@
 import { Chars } from './chars';
 import * as ESTree from './estree';
-import { isKeyword, isDigit, hasOwn, toHex, tryCreate, fromCodePoint, hasMask, isUpdateExpression, isUunaryExpression, isValidDestructuringAssignmentTarget, isDirective, getQualifiedJSXName, isStartOfExpression, isValidSimpleAssignmentTarget } from './common';
+import { isKeyword, isDigit, hasOwn, toHex, tryCreate, fromCodePoint, hasMask, isUunaryExpression, isValidDestructuringAssignmentTarget, isDirective, getQualifiedJSXName, isStartOfExpression, isValidSimpleAssignmentTarget } from './common';
 import { Flags, Context, ScopeMasks, RegExpState, ObjectFlags, RegExpFlag, ParenthesizedState, IterationState } from './masks';
 import { createError, Errors } from './errors';
 import { Token, tokenDesc, descKeyword } from './token';

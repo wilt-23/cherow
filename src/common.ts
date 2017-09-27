@@ -90,31 +90,6 @@ export function getQualifiedJSXName(object: any): string {
  * @param t Token
  * @param flags Flags
  */
-export function isUpdateExpression(t: Token, flags: Flags): boolean {
-    switch (t) {
-        case Token.Add:
-        case Token.Subtract:
-        case Token.TypeofKeyword:
-        case Token.DeleteKeyword:
-        case Token.AwaitKeyword:
-        case Token.Exponentiate:
-        case Token.VoidKeyword:
-        case Token.Negate:
-        case Token.Complement:
-            return false;
-        case Token.LessThan:
-            if (flags & Flags.JSX) return false;
-        default:
-            return true;
-    }
-}
-
-/**
- * Check if this can be used in an update expression
- *
- * @param t Token
- * @param flags Flags
- */
 export function isUunaryExpression(t: Token): boolean {
     switch (t) {
         case Token.Add:

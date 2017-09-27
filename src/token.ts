@@ -6,14 +6,16 @@ export const enum Token {
     Precedence = 15 << PrecStart, // 8-11
 
     /* Attribute names */
-    Contextual      = 1 << 12,
-    Reserved        = 1 << 13,
-    FutureReserved  = 1 << 14,
-    BindingPattern  = 1 << 16,
-    UpdateOperator  = 1 << 17,
-    AssignOperator   = 1 << 18,
-    BinaryOperator    = 1 << 19,
-    UnaryOperator    = 1 << 20,
+    Keyword         = 1 << 12,
+    Reserved        = 1 << 13 | Keyword,
+    FutureReserved  = 1 << 14 | Keyword,
+    Contextual      = 1 << 16,
+    BindingPattern  = 1 << 17,
+    UpdateOperator  = 1 << 18,
+    AssignOperator  = 1 << 19,
+    BinaryOperator  = 1 << 20,
+    UnaryOperator   = 1 << 21,
+    VarDeclStart   = 1 << 22,
  
     /* Node types */
     EndOfSource = 0, // Pseudo
@@ -101,9 +103,9 @@ export const enum Token {
     BitwiseXor         = 70 | BinaryOperator | 4 << PrecStart, // ^
 
     /* Variable declaration kinds */
-    VarKeyword   = 71 | Reserved,
-    LetKeyword   = 72 | FutureReserved,
-    ConstKeyword = 73 | Reserved,
+    VarKeyword   = 71 | VarDeclStart | Reserved,
+    LetKeyword   = 72 | VarDeclStart | FutureReserved,
+    ConstKeyword = 73 | VarDeclStart | Reserved,
 
     /* Other reserved words */
     BreakKeyword    = 74 | Reserved,
@@ -152,7 +154,7 @@ export const enum Token {
     FromKeyword        = 113 | Contextual,
     OfKeyword          = 114 | Contextual,
 
-    EnumKeyword        = 115 | Reserved,    
+    EnumKeyword        = 115 | Reserved,
 }
 
 const KeywordDescTable = [
