@@ -1414,7 +1414,7 @@ is y`);
     it(`should fail on "function hello() { 'use strict'; 021; }"`, () => {
         expect(() => {
             parseScript(`function hello() { 'use strict'; 021; }`)
-        }).to.throw();
+        }).to.not.throw();
     });
     it(`should fail on "() ? 42"`, () => {
         expect(() => {

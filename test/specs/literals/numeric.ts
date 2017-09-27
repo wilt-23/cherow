@@ -91,25 +91,58 @@ describe('Literal - Numeric', () => {
             it('4e+01', () => {
                 expect(parseScript('4e+01', {
                     ranges: true,
-                    raw: true
+                    raw: true,
+                    locations: true
                 })).to.eql({
-                    "body": [{
-                        "end": 5,
-                        "expression": {
-                            "end": 5,
-                            "raw": "4e+01",
-                            "start": 0,
-                            "type": "Literal",
-                            "value": 40
-                        },
-                        "start": 0,
-                        "type": "ExpressionStatement"
-                    }],
-                    "end": 5,
-                    "sourceType": "script",
+                    "type": "Program",
                     "start": 0,
-                    "type": "Program"
-                })
+                    "end": 5,
+                    "loc": {
+                      "start": {
+                        "line": 1,
+                        "column": 0
+                      },
+                      "end": {
+                        "line": 1,
+                        "column": 5
+                      }
+                    },
+                    "body": [
+                      {
+                        "type": "ExpressionStatement",
+                        "start": 0,
+                        "end": 5,
+                        "loc": {
+                          "start": {
+                            "line": 1,
+                            "column": 0
+                          },
+                          "end": {
+                            "line": 1,
+                            "column": 5
+                          }
+                        },
+                        "expression": {
+                          "type": "Literal",
+                          "start": 0,
+                          "end": 5,
+                          "loc": {
+                            "start": {
+                              "line": 1,
+                              "column": 0
+                            },
+                            "end": {
+                              "line": 1,
+                              "column": 5
+                            }
+                          },
+                          "value": 40,
+                          "raw": "4e+01"
+                        }
+                      }
+                    ],
+                    "sourceType": "script"
+                  })
             })
     
     
@@ -140,25 +173,58 @@ describe('Literal - Numeric', () => {
             it('9e+01', () => {
                 expect(parseScript('9e+01', {
                     ranges: true,
-                    raw: true
+                    raw: true,
+                    locations: true
                 })).to.eql({
-                    "body": [{
-                        "end": 5,
-                        "expression": {
-                            "end": 5,
-                            "raw": "9e+01",
-                            "start": 0,
-                            "type": "Literal",
-                            "value": 90
-                        },
-                        "start": 0,
-                        "type": "ExpressionStatement"
-                    }],
-                    "end": 5,
-                    "sourceType": "script",
+                    "type": "Program",
                     "start": 0,
-                    "type": "Program"
-                })
+                    "end": 5,
+                    "loc": {
+                      "start": {
+                        "line": 1,
+                        "column": 0
+                      },
+                      "end": {
+                        "line": 1,
+                        "column": 5
+                      }
+                    },
+                    "body": [
+                      {
+                        "type": "ExpressionStatement",
+                        "start": 0,
+                        "end": 5,
+                        "loc": {
+                          "start": {
+                            "line": 1,
+                            "column": 0
+                          },
+                          "end": {
+                            "line": 1,
+                            "column": 5
+                          }
+                        },
+                        "expression": {
+                          "type": "Literal",
+                          "start": 0,
+                          "end": 5,
+                          "loc": {
+                            "start": {
+                              "line": 1,
+                              "column": 0
+                            },
+                            "end": {
+                              "line": 1,
+                              "column": 5
+                            }
+                          },
+                          "value": 90,
+                          "raw": "9e+01"
+                        }
+                      }
+                    ],
+                    "sourceType": "script"
+                  })
             })
     
             it('3E-01', () => {
@@ -270,25 +336,58 @@ describe('Literal - Numeric', () => {
             it('8e01', () => {
                 expect(parseScript('8e01', {
                     ranges: true,
-                    raw: true
+                    raw: true,
+                    locations: true
                 })).to.eql({
-                    "body": [{
-                        "end": 4,
-                        "expression": {
-                            "end": 4,
-                            "raw": "8e01",
-                            "start": 0,
-                            "type": "Literal",
-                            "value": 80
-                        },
-                        "start": 0,
-                        "type": "ExpressionStatement"
-                    }],
-                    "end": 4,
-                    "sourceType": "script",
+                    "type": "Program",
                     "start": 0,
-                    "type": "Program"
-                })
+                    "end": 4,
+                    "loc": {
+                      "start": {
+                        "line": 1,
+                        "column": 0
+                      },
+                      "end": {
+                        "line": 1,
+                        "column": 4
+                      }
+                    },
+                    "body": [
+                      {
+                        "type": "ExpressionStatement",
+                        "start": 0,
+                        "end": 4,
+                        "loc": {
+                          "start": {
+                            "line": 1,
+                            "column": 0
+                          },
+                          "end": {
+                            "line": 1,
+                            "column": 4
+                          }
+                        },
+                        "expression": {
+                          "type": "Literal",
+                          "start": 0,
+                          "end": 4,
+                          "loc": {
+                            "start": {
+                              "line": 1,
+                              "column": 0
+                            },
+                            "end": {
+                              "line": 1,
+                              "column": 4
+                            }
+                          },
+                          "value": 80,
+                          "raw": "8e01"
+                        }
+                      }
+                    ],
+                    "sourceType": "script"
+                  })
             })
         });
     
@@ -1100,97 +1199,229 @@ describe('Literal - Numeric', () => {
         it('should pare hexIntegerLiteral :: 0X0 Digits', () => {
             expect(parseScript('0X010', {
                 ranges: true,
-                raw: true
+                raw: true,
+                locations: true
             })).to.eql({
-                "body": [{
-                    "end": 5,
-                    "expression": {
-                        "end": 5,
-                        "raw": "0X010",
-                        "start": 0,
-                        "type": "Literal",
-                        "value": 16
-                    },
-                    "start": 0,
-                    "type": "ExpressionStatement"
-                }],
-                "end": 5,
-                "sourceType": "script",
+                "type": "Program",
                 "start": 0,
-                "type": "Program"
-            })
+                "end": 5,
+                "loc": {
+                  "start": {
+                    "line": 1,
+                    "column": 0
+                  },
+                  "end": {
+                    "line": 1,
+                    "column": 5
+                  }
+                },
+                "body": [
+                  {
+                    "type": "ExpressionStatement",
+                    "start": 0,
+                    "end": 5,
+                    "loc": {
+                      "start": {
+                        "line": 1,
+                        "column": 0
+                      },
+                      "end": {
+                        "line": 1,
+                        "column": 5
+                      }
+                    },
+                    "expression": {
+                      "type": "Literal",
+                      "start": 0,
+                      "end": 5,
+                      "loc": {
+                        "start": {
+                          "line": 1,
+                          "column": 0
+                        },
+                        "end": {
+                          "line": 1,
+                          "column": 5
+                        }
+                      },
+                      "value": 16,
+                      "raw": "0X010"
+                    }
+                  }
+                ],
+                "sourceType": "script"
+              });
         })
     
         it('should pare hexIntegerLiteral :: 0X1 Digits', () => {
             expect(parseScript('0X1A', {
                 ranges: true,
-                raw: true
+                raw: true,
+                locations: true
             })).to.eql({
-                "body": [{
-                    "end": 4,
-                    "expression": {
-                        "end": 4,
-                        "raw": "0X1A",
-                        "start": 0,
-                        "type": "Literal",
-                        "value": 26
-                    },
-                    "start": 0,
-                    "type": "ExpressionStatement"
-                }],
-                "end": 4,
-                "sourceType": "script",
+                "type": "Program",
                 "start": 0,
-                "type": "Program"
-            })
+                "end": 4,
+                "loc": {
+                  "start": {
+                    "line": 1,
+                    "column": 0
+                  },
+                  "end": {
+                    "line": 1,
+                    "column": 4
+                  }
+                },
+                "body": [
+                  {
+                    "type": "ExpressionStatement",
+                    "start": 0,
+                    "end": 4,
+                    "loc": {
+                      "start": {
+                        "line": 1,
+                        "column": 0
+                      },
+                      "end": {
+                        "line": 1,
+                        "column": 4
+                      }
+                    },
+                    "expression": {
+                      "type": "Literal",
+                      "start": 0,
+                      "end": 4,
+                      "loc": {
+                        "start": {
+                          "line": 1,
+                          "column": 0
+                        },
+                        "end": {
+                          "line": 1,
+                          "column": 4
+                        }
+                      },
+                      "value": 26,
+                      "raw": "0X1A"
+                    }
+                  }
+                ],
+                "sourceType": "script"
+              })
         })
 
         it('should pare hexIntegerLiteral :: 0X1 Digits', () => {
             expect(parseScript('0012', {
                 ranges: true,
-                raw: true
+                raw: true,
+                locations: true
             })).to.eql({
-                "body": [{
-                    "end": 4,
-                    "expression": {
-                        "end": 4,
-                        "raw": "0012",
-                        "start": 0,
-                        "type": "Literal",
-                        "value": 10
-                    },
-                    "start": 0,
-                    "type": "ExpressionStatement"
-                }],
-                "end": 4,
-                "sourceType": "script",
+                "type": "Program",
                 "start": 0,
-                "type": "Program"
-            })
+                "end": 4,
+                "loc": {
+                  "start": {
+                    "line": 1,
+                    "column": 0
+                  },
+                  "end": {
+                    "line": 1,
+                    "column": 4
+                  }
+                },
+                "body": [
+                  {
+                    "type": "ExpressionStatement",
+                    "start": 0,
+                    "end": 4,
+                    "loc": {
+                      "start": {
+                        "line": 1,
+                        "column": 0
+                      },
+                      "end": {
+                        "line": 1,
+                        "column": 4
+                      }
+                    },
+                    "expression": {
+                      "type": "Literal",
+                      "start": 0,
+                      "end": 4,
+                      "loc": {
+                        "start": {
+                          "line": 1,
+                          "column": 0
+                        },
+                        "end": {
+                          "line": 1,
+                          "column": 4
+                        }
+                      },
+                      "value": 10,
+                      "raw": "0012"
+                    }
+                  }
+                ],
+                "sourceType": "script"
+              })
         })
     
         it('should parse simple digit', () => {
             expect(parseScript('3', {
                 ranges: true,
-                raw: true
+                raw: true,
+                locations: true
             })).to.eql({
-                "body": [{
-                    "end": 1,
-                    "expression": {
-                        "end": 1,
-                        "raw": "3",
-                        "start": 0,
-                        "type": "Literal",
-                        "value": 3
-                    },
-                    "start": 0,
-                    "type": "ExpressionStatement"
-                }],
-                "end": 1,
-                "sourceType": "script",
+                "type": "Program",
                 "start": 0,
-                "type": "Program"
-            })
+                "end": 1,
+                "loc": {
+                  "start": {
+                    "line": 1,
+                    "column": 0
+                  },
+                  "end": {
+                    "line": 1,
+                    "column": 1
+                  }
+                },
+                "body": [
+                  {
+                    "type": "ExpressionStatement",
+                    "start": 0,
+                    "end": 1,
+                    "loc": {
+                      "start": {
+                        "line": 1,
+                        "column": 0
+                      },
+                      "end": {
+                        "line": 1,
+                        "column": 1
+                      }
+                    },
+                    "expression": {
+                      "type": "Literal",
+                      "start": 0,
+                      "end": 1,
+                      "loc": {
+                        "start": {
+                          "line": 1,
+                          "column": 0
+                        },
+                        "end": {
+                          "line": 1,
+                          "column": 1
+                        }
+                      },
+                      "value": 3,
+                      "raw": "3"
+                    }
+                  }
+                ],
+                "sourceType": "script"
+              })
         })
     
         it('should parse long decimal number with exponentIndicator :: E+', () => {
@@ -1269,73 +1500,172 @@ describe('Literal - Numeric', () => {
             it('0b0', () => {
                 expect(parseScript('0b0', {
                     ranges: true,
+                    locations: true,
                     raw: true
                 })).to.eql({
-                    "body": [{
-                        "end": 3,
-                        "expression": {
-                            "end": 3,
-                            "raw": "0b0",
-                            "start": 0,
-                            "type": "Literal",
-                            "value": 0
-                        },
-                        "start": 0,
-                        "type": "ExpressionStatement"
-                    }],
-                    "end": 3,
-                    "sourceType": "script",
+                    "type": "Program",
                     "start": 0,
-                    "type": "Program"
-                })
+                    "end": 3,
+                    "loc": {
+                      "start": {
+                        "line": 1,
+                        "column": 0
+                      },
+                      "end": {
+                        "line": 1,
+                        "column": 3
+                      }
+                    },
+                    "body": [
+                      {
+                        "type": "ExpressionStatement",
+                        "start": 0,
+                        "end": 3,
+                        "loc": {
+                          "start": {
+                            "line": 1,
+                            "column": 0
+                          },
+                          "end": {
+                            "line": 1,
+                            "column": 3
+                          }
+                        },
+                        "expression": {
+                          "type": "Literal",
+                          "start": 0,
+                          "end": 3,
+                          "loc": {
+                            "start": {
+                              "line": 1,
+                              "column": 0
+                            },
+                            "end": {
+                              "line": 1,
+                              "column": 3
+                            }
+                          },
+                          "value": 0,
+                          "raw": "0b0"
+                        }
+                      }
+                    ],
+                    "sourceType": "script"
+                  })
             })
     
             it('0b00', () => {
                 expect(parseScript('0b00', {
                     ranges: true,
+                    locations: true,
                     raw: true
                 })).to.eql({
-                    "body": [{
-                        "end": 4,
-                        "expression": {
-                            "end": 4,
-                            "raw": "0b00",
-                            "start": 0,
-                            "type": "Literal",
-                            "value": 0
-                        },
-                        "start": 0,
-                        "type": "ExpressionStatement"
-                    }],
-                    "end": 4,
-                    "sourceType": "script",
+                    "type": "Program",
                     "start": 0,
-                    "type": "Program"
-                })
+                    "end": 4,
+                    "loc": {
+                      "start": {
+                        "line": 1,
+                        "column": 0
+                      },
+                      "end": {
+                        "line": 1,
+                        "column": 4
+                      }
+                    },
+                    "body": [
+                      {
+                        "type": "ExpressionStatement",
+                        "start": 0,
+                        "end": 4,
+                        "loc": {
+                          "start": {
+                            "line": 1,
+                            "column": 0
+                          },
+                          "end": {
+                            "line": 1,
+                            "column": 4
+                          }
+                        },
+                        "expression": {
+                          "type": "Literal",
+                          "start": 0,
+                          "end": 4,
+                          "loc": {
+                            "start": {
+                              "line": 1,
+                              "column": 0
+                            },
+                            "end": {
+                              "line": 1,
+                              "column": 4
+                            }
+                          },
+                          "value": 0,
+                          "raw": "0b00"
+                        }
+                      }
+                    ],
+                    "sourceType": "script"
+                  })
             })
     
             it('0B1', () => {
                 expect(parseScript('0B1', {
                     ranges: true,
-                    raw: true
+                    raw: true,
+                    locations: true
                 })).to.eql({
-                    "body": [{
-                        "end": 3,
-                        "expression": {
-                            "end": 3,
-                            "raw": "0B1",
-                            "start": 0,
-                            "type": "Literal",
-                            "value": 1
-                        },
-                        "start": 0,
-                        "type": "ExpressionStatement"
-                    }],
-                    "end": 3,
-                    "sourceType": "script",
+                    "type": "Program",
                     "start": 0,
-                    "type": "Program"
-                })
+                    "end": 3,
+                    "loc": {
+                      "start": {
+                        "line": 1,
+                        "column": 0
+                      },
+                      "end": {
+                        "line": 1,
+                        "column": 3
+                      }
+                    },
+                    "body": [
+                      {
+                        "type": "ExpressionStatement",
+                        "start": 0,
+                        "end": 3,
+                        "loc": {
+                          "start": {
+                            "line": 1,
+                            "column": 0
+                          },
+                          "end": {
+                            "line": 1,
+                            "column": 3
+                          }
+                        },
+                        "expression": {
+                          "type": "Literal",
+                          "start": 0,
+                          "end": 3,
+                          "loc": {
+                            "start": {
+                              "line": 1,
+                              "column": 0
+                            },
+                            "end": {
+                              "line": 1,
+                              "column": 3
+                            }
+                          },
+                          "value": 1,
+                          "raw": "0B1"
+                        }
+                      }
+                    ],
+                    "sourceType": "script"
+                  })
             })
     
             it('0b10', () => {
@@ -1386,6 +1716,19 @@ describe('Literal - Numeric', () => {
                 })
             })
     
+
+            it('should fail on binary invalid unicode escape sequence', () => {
+                expect(() => {
+                    parseScript('"use strict"; 09')
+                }).to.not.throw();
+            });
+
+            it('should fail on binary invalid unicode escape sequence', () => {
+                expect(() => {
+                    parseScript('"use strict"; 018')
+                }).to.not.throw();
+            });
+
             it('should fail on binary invalid unicode escape sequence', () => {
                 expect(() => {
                     parseScript('0\\u00620')
@@ -1506,25 +1849,58 @@ describe('Literal - Numeric', () => {
             it('0O0', () => {
                 expect(parseScript('0O0', {
                     ranges: true,
-                    raw: true
+                    raw: true,
+                    locations: true
                 })).to.eql({
-                    "body": [{
-                        "end": 3,
-                        "expression": {
-                            "end": 3,
-                            "raw": "0O0",
-                            "start": 0,
-                            "type": "Literal",
-                            "value": 0
-                        },
-                        "start": 0,
-                        "type": "ExpressionStatement"
-                    }],
-                    "end": 3,
-                    "sourceType": "script",
+                    "type": "Program",
                     "start": 0,
-                    "type": "Program"
-                })
+                    "end": 3,
+                    "loc": {
+                      "start": {
+                        "line": 1,
+                        "column": 0
+                      },
+                      "end": {
+                        "line": 1,
+                        "column": 3
+                      }
+                    },
+                    "body": [
+                      {
+                        "type": "ExpressionStatement",
+                        "start": 0,
+                        "end": 3,
+                        "loc": {
+                          "start": {
+                            "line": 1,
+                            "column": 0
+                          },
+                          "end": {
+                            "line": 1,
+                            "column": 3
+                          }
+                        },
+                        "expression": {
+                          "type": "Literal",
+                          "start": 0,
+                          "end": 3,
+                          "loc": {
+                            "start": {
+                              "line": 1,
+                              "column": 0
+                            },
+                            "end": {
+                              "line": 1,
+                              "column": 3
+                            }
+                          },
+                          "value": 0,
+                          "raw": "0O0"
+                        }
+                      }
+                    ],
+                    "sourceType": "script"
+                  })
             })
     
             it('0o07', () => {
