@@ -261,6 +261,7 @@ export function isAssignmentOperator(t: Token): boolean {
         case Token.ShiftRightAssign:
         case Token.LogicalShiftRightAssign:
         case Token.ExponentiateAssign:
+        case Token.Assign:
         case Token.AddAssign:
         case Token.SubtractAssign:
         case Token.MultiplyAssign:
