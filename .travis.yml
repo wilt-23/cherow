@@ -6,6 +6,5 @@ node_js:
 before_script:
   - npm install
 script:
-   - npm run test
-  # - npm run coverage
-  # - npm run post_coverage
+   - npm run coverage
+   - npm run post_coverage
