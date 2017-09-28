@@ -535,7 +535,7 @@ var Parser = function Parser(source, options) {
 Parser.prototype.parseModule = function parseModule (context) {
     var node = {
         type: 'Program',
-        body: this.parseModuleItems(context | 8192 /* AllowIn */),
+        body: this.ParseModuleItemList(context | 8192 /* AllowIn */),
         sourceType: 'module'
     };
     if (this.flags & 131072 /* OptionsRanges */) {
@@ -1329,7 +1329,6 @@ Parser.prototype.scanNumberLiteral = function scanNumberLiteral (context) {
         { this.error(7 /* StrictOctalEscape */); }
     this.advance();
     var ch = this.nextChar();
-    var bigInt = false;
     // Invalid:  '00o0', '00b0'
     switch (this.source.charCodeAt(this.index + 1)) {
         case 98 /* LowerB */:
@@ -1347,16 +1346,12 @@ Parser.prototype.scanNumberLiteral = function scanNumberLiteral (context) {
         code = code * 8 + (ch - 48);
         this$1.advance();
     }
-    if (this.flags & 4194304 /* OptionsNext */) {
-        if (ch === 110 /* LowerN */) {
-            bigInt = true;
-            this.advance();
-        }
-    }
+    this.tokenValue = code;
+    if (this.flags & 4194304 /* OptionsNext */ && ch === 110 /* LowerN */)
+        { return this.scanBigInt(); }
     if (this.flags & 2097152 /* OptionsRaw */)
         { this.tokenRaw = this.source.slice(this.startPos, this.index); }
-    this.tokenValue = code;
-    return bigInt ? 116 /* BigIntLiteral */ : 2 /* NumericLiteral */;
+    return 2 /* NumericLiteral */;
 };
 Parser.prototype.scanOctalDigits = function scanOctalDigits (context) {
         var this$1 = this;
@@ -1382,17 +1377,12 @@ Parser.prototype.scanOctalDigits = function scanOctalDigits (context) {
         code = (code << 3) | (ch - 48 /* Zero */);
         this$1.advance();
     }
-    var bigInt = false;
-    if (this.flags & 4194304 /* OptionsNext */) {
-        if (ch === 110 /* LowerN */) {
-            bigInt = true;
-            this.advance();
-        }
-    }
+    this.tokenValue = code;
+    if (this.flags & 4194304 /* OptionsNext */ && ch === 110 /* LowerN */)
+        { return this.scanBigInt(); }
     if (this.flags & 2097152 /* OptionsRaw */)
         { this.tokenRaw = this.source.slice(this.startPos, this.index); }
-    this.tokenValue = code;
-    return bigInt ? 116 /* BigIntLiteral */ : 2 /* NumericLiteral */;
+    return 2 /* NumericLiteral */;
 };
 Parser.prototype.scanHexadecimalDigit = function scanHexadecimalDigit () {
         var this$1 = this;
@@ -1402,7 +1392,6 @@ Parser.prototype.scanHexadecimalDigit = function scanHexadecimalDigit () {
         { this.error(73 /* ExpectedHexDigits */); }
     var ch = this.nextChar();
     var code = toHex(ch);
-    var bigInt = false;
     if (code < 0)
         { this.error(74 /* InvalidHexEscapeSequence */); }
     this.advance();
@@ -1414,16 +1403,12 @@ Parser.prototype.scanHexadecimalDigit = function scanHexadecimalDigit () {
         code = code << 4 | digit;
         this$1.advance();
     }
-    if (this.flags & 4194304 /* OptionsNext */) {
-        if (ch === 110 /* LowerN */) {
-            bigInt = true;
-            this.advance();
-        }
-    }
     this.tokenValue = code;
+    if (this.flags & 4194304 /* OptionsNext */ && ch === 110 /* LowerN */)
+        { return this.scanBigInt(); }
     if (this.flags & 2097152 /* OptionsRaw */)
         { this.tokenRaw = this.source.slice(this.startPos, this.index); }
-    return bigInt ? 116 /* BigIntLiteral */ : 2 /* NumericLiteral */;
+    return 2 /* NumericLiteral */;
 };
 Parser.prototype.scanBinaryDigits = function scanBinaryDigits (context) {
         var this$1 = this;
@@ -1431,7 +1416,6 @@ Parser.prototype.scanBinaryDigits = function scanBinaryDigits (context) {
     this.advanceTwice();
     var ch = this.nextChar();
     var code = ch - 48;
-    var bigInt = false;
     // Invalid:  '0b'
     if (ch !== 48 /* Zero */ && ch !== 49 /* One */)
         { this.error(50 /* InvalidBinaryDigit */); }
@@ -1445,16 +1429,19 @@ Parser.prototype.scanBinaryDigits = function scanBinaryDigits (context) {
         code = (code << 1) | (ch - 48 /* Zero */);
         this$1.advance();
     }
-    if (this.flags & 4194304 /* OptionsNext */) {
-        if (ch === 110 /* LowerN */) {
-            bigInt = true;
-            this.advance();
-        }
-    }
+    this.tokenValue = code;
+    if (this.flags & 4194304 /* OptionsNext */ && ch === 110 /* LowerN */)
+        { return this.scanBigInt(); }
     if (this.flags & 2097152 /* OptionsRaw */)
         { this.tokenRaw = this.source.slice(this.startPos, this.index); }
-    this.tokenValue = code;
-    return bigInt ? 116 /* BigIntLiteral */ : 2 /* NumericLiteral */;
+    return 2 /* NumericLiteral */;
+};
+Parser.prototype.scanBigInt = function scanBigInt () {
+    this.advance();
+    if (this.flags & 2097152 /* OptionsRaw */) {
+        this.tokenRaw = this.source.slice(this.startPos, this.index);
+    }
+    return 116 /* BigIntLiteral */;
 };
 Parser.prototype.skipDigits = function skipDigits () {
         var this$1 = this;
@@ -1480,11 +1467,10 @@ Parser.prototype.skipDigits = function skipDigits () {
 };
 Parser.prototype.scanNumber = function scanNumber (context, ch) {
     var start = this.index;
-    var isBigInt = false;
-    var isFloat = false;
+    var state = 0;
     this.skipDigits();
     if (this.nextChar() === 46 /* Period */) {
-        isFloat = true;
+        state |= 1 /* Float */;
         this.advance();
         this.skipDigits();
     }
@@ -1492,15 +1478,15 @@ Parser.prototype.scanNumber = function scanNumber (context, ch) {
     switch (this.nextChar()) {
         case 110 /* LowerN */:
             if (this.flags & 4194304 /* OptionsNext */) {
-                if (isFloat)
+                if (state & 1 /* Float */)
                     { this.error(0 /* Unexpected */); }
                 this.advance();
-                isBigInt = true;
+                state |= 2 /* BigInt */;
             }
         case 69 /* UpperE */:
         case 101 /* LowerE */:
-            isFloat = true;
             this.advance();
+            state |= 1 /* Float */;
             switch (this.nextChar()) {
                 case 43 /* Plus */:
                 case 45 /* Hyphen */:
@@ -1525,7 +1511,7 @@ Parser.prototype.scanNumber = function scanNumber (context, ch) {
     if (this.flags & 2097152 /* OptionsRaw */)
         { this.tokenRaw = this.source.substring(start, end); }
     this.tokenValue = parseFloat(this.source.substring(start, end));
-    return isBigInt ? 116 /* BigIntLiteral */ : 2 /* NumericLiteral */;
+    return state & 2 /* BigInt */ ? 116 /* BigIntLiteral */ : 2 /* NumericLiteral */;
 };
 Parser.prototype.scanRegularExpression = function scanRegularExpression () {
         var this$1 = this;
@@ -1951,9 +1937,16 @@ Parser.prototype.scanTemplate = function scanTemplate (context) {
         return 8 /* TemplateCont */;
     }
 };
-Parser.prototype.parseModuleItems = function parseModuleItems (context) {
+Parser.prototype.ParseModuleItemList = function ParseModuleItemList (context) {
         var this$1 = this;
 
+    // ecma262/#prod-Module
+    // Module :
+    //ModuleBody?
+    //
+    // ecma262/#prod-ModuleItemList
+    // ModuleBody :
+    //   ModuleItem*
     var pos = this.getLocations();
     this.nextToken(context);
     var statements = [];
@@ -2105,6 +2098,10 @@ Parser.prototype.isLexical = function isLexical (context) {
     return hasMask(next, 131072 /* BindingPattern */);
 };
 Parser.prototype.parseExportDefault = function parseExportDefault (context, pos) {
+    //  Supports the following productions, starting after the 'default' token:
+    //'export' 'default' HoistableDeclaration
+    //'export' 'default' ClassDeclaration
+    //'export' 'default' AssignmentExpression[In] ';'
     this.expect(context, 12368 /* DefaultKeyword */);
     var declaration;
     switch (this.token) {
@@ -2122,6 +2119,7 @@ Parser.prototype.parseExportDefault = function parseExportDefault (context, pos)
                 declaration = this.parseFunctionDeclaration(context | 33554432 /* Export */);
                 break;
             }
+        /* falls through */
         default:
             // export default [lookahead ∉ {function, class}] AssignmentExpression[In] ;
             declaration = this.parseAssignmentExpression(context);
@@ -2135,6 +2133,12 @@ Parser.prototype.parseExportDefault = function parseExportDefault (context, pos)
 Parser.prototype.parseExportDeclaration = function parseExportDeclaration (context) {
         var this$1 = this;
 
+    // ExportDeclaration:
+    //'export' '*' 'from' ModuleSpecifier ';'
+    //'export' ExportClause ('from' ModuleSpecifier)? ';'
+    //'export' VariableStatement
+    //'export' Declaration
+    //'export' 'default' ... (handled in ParseExportDefault)
     if (this.flags & 4 /* InFunctionBody */)
         { this.error(57 /* ExportDeclAtTopLevel */); }
     var pos = this.getLocations();
@@ -2149,9 +2153,18 @@ Parser.prototype.parseExportDeclaration = function parseExportDeclaration (conte
         // export * FromClause ;
         case 1051187 /* Multiply */:
             return this.parseExportAllDeclaration(context, pos);
-        // export' ExportClause ';
-        // export' ExportClause FromClause ';
         case 131084 /* LeftBrace */:
+            // There are two cases here:
+            //
+            // 'export' ExportClause ';'
+            // and
+            // 'export' ExportClause FromClause ';'
+            //
+            // In the first case, the exported identifiers in ExportClause must
+            // not be reserved words, while in the latter they may be. We
+            // pass in a location that gets filled with the first reserved word
+            // encountered, and then throw a SyntaxError if we are in the
+            // non-FromClause case.
             this.expect(context, 131084 /* LeftBrace */);
             while (!this.parseOptional(context, 15 /* RightBrace */)) {
                 if (this$1.token === 12368 /* DefaultKeyword */)
@@ -2237,6 +2250,8 @@ Parser.prototype.parseExportAllDeclaration = function parseExportAllDeclaration 
     });
 };
 Parser.prototype.parseModuleSpecifier = function parseModuleSpecifier (context) {
+    // ModuleSpecifier :
+    //StringLiteral
     if (this.token !== 3 /* StringLiteral */)
         { this.error(44 /* InvalidModuleSpecifier */); }
     return this.parseLiteral(context);
@@ -2249,6 +2264,9 @@ Parser.prototype.parseImportSpecifier = function parseImportSpecifier (context) 
     if (this.isIdentifier(context, this.token)) {
         imported = this.parseBindingIdentifier(context);
         local = imported;
+        // In the presence of 'as', the left-side of the 'as' can
+        // be any IdentifierName. But without 'as', it must be a valid
+        // BindingIdentifier.
         if (this.token === 65643 /* AsKeyword */) {
             if (this.parseOptional(context, 65643 /* AsKeyword */)) {
                 local = this.parseBindingPatternOrIdentifier(context | 4194304 /* Binding */);
@@ -2309,6 +2327,19 @@ Parser.prototype.parseImportDefaultSpecifier = function parseImportDefaultSpecif
     });
 };
 Parser.prototype.parseImportDeclaration = function parseImportDeclaration (context) {
+    // ImportDeclaration :
+    //   'import' ImportClause 'from' ModuleSpecifier ';'
+    //   'import' ModuleSpecifier ';'
+    //
+    // ImportClause :
+    //   ImportedDefaultBinding
+    //   NameSpaceImport
+    //   NamedImports
+    //   ImportedDefaultBinding ',' NameSpaceImport
+    //   ImportedDefaultBinding ',' NamedImports
+    //
+    // NameSpaceImport :
+    //   '*' 'as' ImportedBinding
     if (this.flags & 4 /* InFunctionBody */)
         { this.error(58 /* ImportDeclAtTopLevel */); }
     var pos = this.getLocations();
@@ -2366,6 +2397,11 @@ Parser.prototype.parseImportDeclaration = function parseImportDeclaration (conte
     });
 };
 Parser.prototype.parseModuleItem = function parseModuleItem (context) {
+    // ecma262/#prod-ModuleItem
+    // ModuleItem :
+    //ImportDeclaration
+    //ExportDeclaration
+    //StatementListItem
     switch (this.token) {
         // 'export'
         case 12371 /* ExportKeyword */:
@@ -3204,7 +3240,7 @@ Parser.prototype.parseUnaryExpression = function parseUnaryExpression (context) 
         if (context & 2048 /* Await */ && this.token === 2162797 /* AwaitKeyword */)
             { return this.parseAwaitExpression(context, pos); }
         var token = this.token;
-        expr = this.parseSimpleUnaryExpression(context);
+        expr = this.buildUnaryExpression(context);
         // When a delete operator occurs within strict mode code, a SyntaxError is thrown if its
         // UnaryExpression is a direct reference to a variable, function argument, or function name
         if (context & 2 /* Strict */ && token === 2109483 /* DeleteKeyword */ && expr.argument.type === 'Identifier') {
@@ -3220,12 +3256,7 @@ Parser.prototype.parseUnaryExpression = function parseUnaryExpression (context) 
         { return expr; }
     return this.parseBinaryExpression(context, this.getBinaryPrecedence(context), pos, expr);
 };
-/**
- * Build unary expressions
- *
- * @param context Context
- */
-Parser.prototype.parseSimpleUnaryExpression = function parseSimpleUnaryExpression (context) {
+Parser.prototype.buildUnaryExpression = function buildUnaryExpression (context) {
     var pos = this.getLocations();
     switch (this.token) {
         case 2109483 /* DeleteKeyword */:
@@ -3240,7 +3271,7 @@ Parser.prototype.parseSimpleUnaryExpression = function parseSimpleUnaryExpressio
             return this.finishNode(pos, {
                 type: 'UnaryExpression',
                 operator: tokenDesc(token),
-                argument: this.parseSimpleUnaryExpression(context),
+                argument: this.buildUnaryExpression(context),
                 prefix: true
             });
         default:
@@ -3249,7 +3280,7 @@ Parser.prototype.parseSimpleUnaryExpression = function parseSimpleUnaryExpressio
 };
 Parser.prototype.parseAwaitExpression = function parseAwaitExpression (context, pos) {
     this.expect(context, 2162797 /* AwaitKeyword */);
-    var argument = this.parseSimpleUnaryExpression(context);
+    var argument = this.buildUnaryExpression(context);
     return this.finishNode(pos, {
         type: 'AwaitExpression',
         argument: argument

@@ -68,6 +68,12 @@ export const enum Flags {
     OptionsV8                    = 1 << 25
 }
 
+export const enum NumberState {
+    None    = 0,
+    Float   = 1 << 0,
+    BigInt  = 1 << 1,
+}
+
 export const enum IterationState {
     None                = 0,
     Var                 = 1 << 0,  // Variable declaration

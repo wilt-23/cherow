@@ -1,7 +1,7 @@
 import { Chars } from './chars';
 import * as ESTree from './estree';
 import { isKeyword, isDigit, hasOwn, toHex, tryCreate, fromCodePoint, hasMask, isValidDestructuringAssignmentTarget, isDirective, getQualifiedJSXName, isStartOfExpression, isValidSimpleAssignmentTarget } from './common';
-import { Flags, Context, ScopeMasks, RegExpState, ObjectFlags, RegExpFlag, ParenthesizedState, IterationState } from './masks';
+import { Flags, Context, ScopeMasks, RegExpState, ObjectFlags, RegExpFlag, ParenthesizedState, IterationState, NumberState } from './masks';
 import { createError, Errors } from './errors';
 import { Token, tokenDesc, descKeyword } from './token';
 import { isValidIdentifierStart, isIdentifierStart, isIdentifierPart } from './unicode';
@@ -78,7 +78,7 @@ export class Parser {
 
         const node: ESTree.Program = {
             type: 'Program',
-            body: this.parseModuleItems(context | Context.AllowIn),
+            body: this.ParseModuleItemList(context | Context.AllowIn),
             sourceType: 'module'
         };
 
@@ -952,7 +952,6 @@ export class Parser {
         const start = this.index;
 
         let ch = this.nextChar();
-        let bigInt = false;
 
         // Invalid:  '00o0', '00b0'
         switch (this.source.charCodeAt(this.index + 1)) {
@@ -972,18 +971,12 @@ export class Parser {
             code = code * 8 + (ch - 48);
             this.advance();
         }
-        if (this.flags & Flags.OptionsNext) {
-
-
-            if (ch === Chars.LowerN) {
-                bigInt = true;
-                this.advance();
-            }
-        }
-        if (this.flags & Flags.OptionsRaw) this.tokenRaw = this.source.slice(this.startPos, this.index);
 
         this.tokenValue = code;
-        return bigInt ? Token.BigIntLiteral : Token.NumericLiteral;
+
+        if (this.flags & Flags.OptionsNext && ch === Chars.LowerN) return this.scanBigInt();
+        if (this.flags & Flags.OptionsRaw) this.tokenRaw = this.source.slice(this.startPos, this.index);
+        return Token.NumericLiteral;
     }
 
     private scanOctalDigits(context: Context): Token {
@@ -1011,21 +1004,13 @@ export class Parser {
             this.advance();
         }
 
-        let bigInt = false;
-
-        if (this.flags & Flags.OptionsNext) {
-
-
-            if (ch === Chars.LowerN) {
-                bigInt = true;
-                this.advance();
-            }
-        }
-        if (this.flags & Flags.OptionsRaw) this.tokenRaw = this.source.slice(this.startPos, this.index);
-
         this.tokenValue = code;
 
-        return bigInt ? Token.BigIntLiteral : Token.NumericLiteral;
+        if (this.flags & Flags.OptionsNext && ch === Chars.LowerN) return this.scanBigInt();
+
+        if (this.flags & Flags.OptionsRaw) this.tokenRaw = this.source.slice(this.startPos, this.index);
+
+        return Token.NumericLiteral;
     }
 
     private scanHexadecimalDigit() {
@@ -1035,7 +1020,6 @@ export class Parser {
         if (!this.hasNext()) this.error(Errors.ExpectedHexDigits);
         let ch = this.nextChar();
         let code = toHex(ch);
-        let bigInt = false;
 
         if (code < 0) this.error(Errors.InvalidHexEscapeSequence);
 
@@ -1049,17 +1033,11 @@ export class Parser {
             this.advance();
         }
 
-        if (this.flags & Flags.OptionsNext) {
-            if (ch === Chars.LowerN) {
-                bigInt = true;
-                this.advance();
-            }
-        }
         this.tokenValue = code;
 
+        if (this.flags & Flags.OptionsNext && ch === Chars.LowerN) return this.scanBigInt();
         if (this.flags & Flags.OptionsRaw) this.tokenRaw = this.source.slice(this.startPos, this.index);
-
-        return bigInt ? Token.BigIntLiteral : Token.NumericLiteral;
+        return Token.NumericLiteral;
     }
 
     private scanBinaryDigits(context: Context): Token {
@@ -1068,7 +1046,7 @@ export class Parser {
 
         let ch = this.nextChar();
         let code = ch - Chars.Zero;
-        let bigInt = false;
+
         // Invalid:  '0b'
         if (ch !== Chars.Zero && ch !== Chars.One) this.error(Errors.InvalidBinaryDigit);
 
@@ -1082,16 +1060,22 @@ export class Parser {
             this.advance();
         }
 
-        if (this.flags & Flags.OptionsNext) {
-            if (ch === Chars.LowerN) {
-                bigInt = true;
-                this.advance();
-            }
-        }
+        this.tokenValue = code;
+
+        if (this.flags & Flags.OptionsNext && ch === Chars.LowerN) return this.scanBigInt();
         if (this.flags & Flags.OptionsRaw) this.tokenRaw = this.source.slice(this.startPos, this.index);
 
-        this.tokenValue = code;
-        return bigInt ? Token.BigIntLiteral : Token.NumericLiteral;
+        return Token.NumericLiteral;
+    }
+
+    private scanBigInt() {
+        this.advance();
+
+        if (this.flags & Flags.OptionsRaw) {
+            this.tokenRaw = this.source.slice(this.startPos, this.index);
+        }
+
+        return Token.BigIntLiteral;
     }
 
     private skipDigits() {
@@ -1118,13 +1102,14 @@ export class Parser {
     private scanNumber(context: Context, ch: Chars): Token {
 
         const start = this.index;
-        let isBigInt = false;
-        let isFloat = false;
+        let state = NumberState.None;
 
         this.skipDigits();
 
         if (this.nextChar() === Chars.Period) {
-            isFloat = true;
+
+            state |= NumberState.Float;
+
             this.advance();
             this.skipDigits();
         }
@@ -1134,14 +1119,17 @@ export class Parser {
         switch (this.nextChar()) {
             case Chars.LowerN:
                 if (this.flags & Flags.OptionsNext) {
-                    if (isFloat) this.error(Errors.Unexpected);
+                    if (state & NumberState.Float) this.error(Errors.Unexpected);
                     this.advance();
-                    isBigInt = true;
+                    state |= NumberState.BigInt;
                 }
             case Chars.UpperE:
             case Chars.LowerE:
-                isFloat = true;
+
                 this.advance();
+
+                state |= NumberState.Float;
+
                 switch (this.nextChar()) {
                     case Chars.Plus:
                     case Chars.Hyphen:
@@ -1166,8 +1154,10 @@ export class Parser {
         }
 
         if (this.flags & Flags.OptionsRaw) this.tokenRaw = this.source.substring(start, end);
+
         this.tokenValue = parseFloat(this.source.substring(start, end));
-        return isBigInt ? Token.BigIntLiteral : Token.NumericLiteral;
+
+        return state & NumberState.BigInt ? Token.BigIntLiteral : Token.NumericLiteral;
     }
 
     private scanRegularExpression(): Token {
@@ -1639,7 +1629,14 @@ export class Parser {
         }
     }
 
-    private parseModuleItems(context: Context): ESTree.Statement[] {
+    private ParseModuleItemList(context: Context): ESTree.Statement[] {
+        // ecma262/#prod-Module
+        // Module :
+        //    ModuleBody?
+        //
+        // ecma262/#prod-ModuleItemList
+        // ModuleBody :
+        //   ModuleItem*
         const pos = this.getLocations();
         this.nextToken(context);
 
@@ -1805,7 +1802,10 @@ export class Parser {
     }
 
     private parseExportDefault(context: Context, pos: Location): ESTree.ExportDefaultDeclaration {
-
+        //  Supports the following productions, starting after the 'default' token:
+        //    'export' 'default' HoistableDeclaration
+        //    'export' 'default' ClassDeclaration
+        //    'export' 'default' AssignmentExpression[In] ';'
         this.expect(context, Token.DefaultKeyword);
 
         let declaration: ESTree.FunctionDeclaration | ESTree.ClassDeclaration | ESTree.Expression;
@@ -1816,16 +1816,19 @@ export class Parser {
             case Token.FunctionKeyword:
                 declaration = this.parseFunctionDeclaration(context |= (Context.OptionalIdentifier | Context.Export));
                 break;
+
                 // export default ClassDeclaration[Default]
             case Token.ClassKeyword:
                 declaration = this.parseClassDeclaration(context | (Context.OptionalIdentifier | Context.Export));
                 break;
+
                 // export default HoistableDeclaration[Default]
             case Token.AsyncKeyword:
                 if (this.nextTokenIsFunctionKeyword(context)) {
                     declaration = this.parseFunctionDeclaration(context | Context.Export);
                     break;
                 }
+                /* falls through */
             default:
                 // export default [lookahead ∉ {function, class}] AssignmentExpression[In] ;
                 declaration = this.parseAssignmentExpression(context);
@@ -1839,7 +1842,12 @@ export class Parser {
     }
 
     private parseExportDeclaration(context: Context): ESTree.ExportAllDeclaration | ESTree.ExportNamedDeclaration | ESTree.ExportDefaultDeclaration {
-
+        // ExportDeclaration:
+        //    'export' '*' 'from' ModuleSpecifier ';'
+        //    'export' ExportClause ('from' ModuleSpecifier)? ';'
+        //    'export' VariableStatement
+        //    'export' Declaration
+        //    'export' 'default' ... (handled in ParseExportDefault)
         if (this.flags & Flags.InFunctionBody) this.error(Errors.ExportDeclAtTopLevel);
 
         const pos = this.getLocations();
@@ -1860,10 +1868,18 @@ export class Parser {
             case Token.Multiply:
                 return this.parseExportAllDeclaration(context, pos);
 
-                // export' ExportClause ';
-                // export' ExportClause FromClause ';
             case Token.LeftBrace:
-
+                // There are two cases here:
+                //
+                // 'export' ExportClause ';'
+                // and
+                // 'export' ExportClause FromClause ';'
+                //
+                // In the first case, the exported identifiers in ExportClause must
+                // not be reserved words, while in the latter they may be. We
+                // pass in a location that gets filled with the first reserved word
+                // encountered, and then throw a SyntaxError if we are in the
+                // non-FromClause case.
                 this.expect(context, Token.LeftBrace);
 
                 while (!this.parseOptional(context, Token.RightBrace)) {
@@ -1963,6 +1979,8 @@ export class Parser {
     }
 
     private parseModuleSpecifier(context: Context): ESTree.Literal {
+        // ModuleSpecifier :
+        //    StringLiteral
         if (this.token !== Token.StringLiteral) this.error(Errors.InvalidModuleSpecifier);
         return this.parseLiteral(context);
     }
@@ -1977,6 +1995,9 @@ export class Parser {
         if (this.isIdentifier(context, this.token)) {
             imported = this.parseBindingIdentifier(context);
             local = imported;
+            // In the presence of 'as', the left-side of the 'as' can
+            // be any IdentifierName. But without 'as', it must be a valid
+            // BindingIdentifier.
             if (this.token === Token.AsKeyword) {
                 if (this.parseOptional(context, Token.AsKeyword)) {
                     local = this.parseBindingPatternOrIdentifier(context | Context.Binding);
@@ -2040,7 +2061,19 @@ export class Parser {
     }
 
     private parseImportDeclaration(context: Context): ESTree.ImportDeclaration {
-
+        // ImportDeclaration :
+        //   'import' ImportClause 'from' ModuleSpecifier ';'
+        //   'import' ModuleSpecifier ';'
+        //
+        // ImportClause :
+        //   ImportedDefaultBinding
+        //   NameSpaceImport
+        //   NamedImports
+        //   ImportedDefaultBinding ',' NameSpaceImport
+        //   ImportedDefaultBinding ',' NamedImports
+        //
+        // NameSpaceImport :
+        //   '*' 'as' ImportedBinding
         if (this.flags & Flags.InFunctionBody) this.error(Errors.ImportDeclAtTopLevel);
 
         const pos = this.getLocations();
@@ -2113,7 +2146,11 @@ export class Parser {
     }
 
     private parseModuleItem(context: Context): any {
-
+        // ecma262/#prod-ModuleItem
+        // ModuleItem :
+        //    ImportDeclaration
+        //    ExportDeclaration
+        //    StatementListItem
         switch (this.token) {
 
             // 'export'
@@ -3093,7 +3130,7 @@ export class Parser {
         if (hasMask(this.token, Token.UnaryOperator)) {
             if (context & Context.Await && this.token === Token.AwaitKeyword) return this.parseAwaitExpression(context, pos);
             const token = this.token;
-            expr = this.parseSimpleUnaryExpression(context);
+            expr = this.buildUnaryExpression(context);
             // When a delete operator occurs within strict mode code, a SyntaxError is thrown if its
             // UnaryExpression is a direct reference to a variable, function argument, or function name
             if (context & Context.Strict && token === Token.DeleteKeyword && expr.argument.type === 'Identifier') {
@@ -3108,12 +3145,7 @@ export class Parser {
         return this.parseBinaryExpression(context, this.getBinaryPrecedence(context), pos, expr);
     }
 
-    /**
-     * Build unary expressions
-     *
-     * @param context Context
-     */
-    private parseSimpleUnaryExpression(context: Context): ESTree.Expression {
+    private buildUnaryExpression(context: Context): ESTree.Expression {
 
         const pos = this.getLocations();
 
@@ -3130,7 +3162,7 @@ export class Parser {
                 return this.finishNode(pos, {
                     type: 'UnaryExpression',
                     operator: tokenDesc(token),
-                    argument: this.parseSimpleUnaryExpression(context),
+                    argument: this.buildUnaryExpression(context),
                     prefix: true
                 });
             default:
@@ -3140,7 +3172,7 @@ export class Parser {
 
     private parseAwaitExpression(context: Context, pos: Location): ESTree.AwaitExpression {
         this.expect(context, Token.AwaitKeyword);
-        const argument = this.parseSimpleUnaryExpression(context);
+        const argument = this.buildUnaryExpression(context);
         return this.finishNode(pos, {
             type: 'AwaitExpression',
             argument
