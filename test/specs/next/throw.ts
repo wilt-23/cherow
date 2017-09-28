@@ -5,6 +5,15 @@ const expect = chai.expect;
 
 describe('Next - Throw expression', () => {
 
+    it.skip('should fail on invalid use of parenthesis', () => {
+        expect(() => {
+            parseScript('function test() { (throw 1, 2); }', {
+                next: true
+            });
+        }).to.throw();
+    });
+
+
     it('should parse arrow function body', () => {
         expect(parseScript(`function save(filename = throw new TypeError("Argument required")) {}`, {
             raw: true,
@@ -584,5 +593,271 @@ describe('Next - Throw expression', () => {
             "start": 0,
             "end": 100
         });
+    });
+
+    it('should parse with comma', () => {
+        expect(parseScript(`function test() {
+              (throw 1, 2);
+            }`, {
+            raw: true,
+            ranges: true,
+            next: true
+        })).to.eql({
+            "type": "Program",
+            "body": [
+                {
+                    "type": "FunctionDeclaration",
+                    "params": [],
+                    "body": {
+                        "type": "BlockStatement",
+                        "body": [
+                            {
+                                "type": "ExpressionStatement",
+                                "expression": {
+                                    "type": "SequenceExpression",
+                                    "expressions": [
+                                        {
+                                            "type": "ThrowExpression",
+                                            "expressions": {
+                                                "type": "Literal",
+                                                "value": 1,
+                                                "start": 39,
+                                                "end": 40,
+                                                "raw": "1"
+                                            },
+                                            "start": 33,
+                                            "end": 40
+                                        },
+                                        {
+                                            "type": "Literal",
+                                            "value": 2,
+                                            "start": 42,
+                                            "end": 43,
+                                            "raw": "2"
+                                        }
+                                    ],
+                                    "start": 33,
+                                    "end": 43
+                                },
+                                "start": 32,
+                                "end": 45
+                            }
+                        ],
+                        "start": 16,
+                        "end": 59
+                    },
+                    "async": false,
+                    "generator": false,
+                    "expression": false,
+                    "id": {
+                        "type": "Identifier",
+                        "name": "test",
+                        "start": 9,
+                        "end": 13
+                    },
+                    "start": 0,
+                    "end": 59
+                }
+            ],
+            "sourceType": "script",
+            "start": 0,
+            "end": 59
+        });
+    });
+
+    it('should parse as expression', () => {
+        expect(parseScript(`function test() {
+              (throw 1);
+            }`, {
+            raw: true,
+            ranges: true,
+            next: true
+        })).to.eql({
+            "type": "Program",
+            "body": [
+                {
+                    "type": "FunctionDeclaration",
+                    "params": [],
+                    "body": {
+                        "type": "BlockStatement",
+                        "body": [
+                            {
+                                "type": "ExpressionStatement",
+                                "expression": {
+                                    "type": "ThrowExpression",
+                                    "expressions": {
+                                        "type": "Literal",
+                                        "value": 1,
+                                        "start": 39,
+                                        "end": 40,
+                                        "raw": "1"
+                                    },
+                                    "start": 33,
+                                    "end": 40
+                                },
+                                "start": 32,
+                                "end": 42
+                            }
+                        ],
+                        "start": 16,
+                        "end": 56
+                    },
+                    "async": false,
+                    "generator": false,
+                    "expression": false,
+                    "id": {
+                        "type": "Identifier",
+                        "name": "test",
+                        "start": 9,
+                        "end": 13
+                    },
+                    "start": 0,
+                    "end": 56
+                }
+            ],
+            "sourceType": "script",
+            "start": 0,
+            "end": 56
+        });
+    });
+
+    it('should parse as logical expression', () => {
+        expect(parseScript(`function test() {
+              true && throw 1;
+            }`, {
+            raw: true,
+            ranges: true,
+            next: true
+        })).to.eql({
+            "type": "Program",
+            "body": [
+                {
+                    "type": "FunctionDeclaration",
+                    "params": [],
+                    "body": {
+                        "type": "BlockStatement",
+                        "body": [
+                            {
+                                "type": "ExpressionStatement",
+                                "expression": {
+                                    "type": "LogicalExpression",
+                                    "left": {
+                                        "type": "Literal",
+                                        "value": true,
+                                        "start": 32,
+                                        "end": 36,
+                                        "raw": "true"
+                                    },
+                                    "right": {
+                                        "type": "ThrowExpression",
+                                        "expressions": {
+                                            "type": "Literal",
+                                            "value": 1,
+                                            "start": 46,
+                                            "end": 47,
+                                            "raw": "1"
+                                        },
+                                        "start": 40,
+                                        "end": 47
+                                    },
+                                    "operator": "&&",
+                                    "start": 32,
+                                    "end": 47
+                                },
+                                "start": 32,
+                                "end": 48
+                            }
+                        ],
+                        "start": 16,
+                        "end": 62
+                    },
+                    "async": false,
+                    "generator": false,
+                    "expression": false,
+                    "id": {
+                        "type": "Identifier",
+                        "name": "test",
+                        "start": 9,
+                        "end": 13
+                    },
+                    "start": 0,
+                    "end": 62
+                }
+            ],
+            "sourceType": "script",
+            "start": 0,
+            "end": 62
+        });
+    });
+
+    it('should parse statement', () => {
+        expect(parseScript(`function test() {
+              throw 1;
+            }`, {
+            raw: true,
+            ranges: true,
+            next: true
+        })).to.eql({
+            "type": "Program",
+            "body": [
+                {
+                    "type": "FunctionDeclaration",
+                    "params": [],
+                    "body": {
+                        "type": "BlockStatement",
+                        "body": [
+                            {
+                                "type": "ThrowStatement",
+                                "argument": {
+                                    "type": "Literal",
+                                    "value": 1,
+                                    "start": 38,
+                                    "end": 39,
+                                    "raw": "1"
+                                },
+                                "start": 32,
+                                "end": 40
+                            }
+                        ],
+                        "start": 16,
+                        "end": 54
+                    },
+                    "async": false,
+                    "generator": false,
+                    "expression": false,
+                    "id": {
+                        "type": "Identifier",
+                        "name": "test",
+                        "start": 9,
+                        "end": 13
+                    },
+                    "start": 0,
+                    "end": 54
+                }
+            ],
+            "sourceType": "script",
+            "start": 0,
+            "end": 54
+        });
+    });
+
+    it('should parse with comma', () => {
+        expect(parseScript(`function test() {
+              (throw 1, 2);
+            }`, {
+            raw: true,
+            ranges: true,
+            next: true
+        })).to.eql({});
+    });
+
+    it('should parse with comma', () => {
+        expect(parseScript(`function test() {
+              (throw 1, 2);
+            }`, {
+            raw: true,
+            ranges: true,
+            next: true
+        })).to.eql({});
     });
 });
