@@ -3,7 +3,7 @@ import * as chai from 'chai';
 
 const expect = chai.expect;
 
-describe('Statements - For await of', () => {
+describe('Next - For await of', () => {
 
     it("should fail if `yield` appears within the destructuring assignment target", () => {
         expect(() => {

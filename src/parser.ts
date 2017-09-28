@@ -950,7 +950,9 @@ export class Parser {
         this.advance();
 
         const start = this.index;
+
         let ch = this.nextChar();
+        let bigInt = false;
 
         // Invalid:  '00o0', '00b0'
         switch (this.source.charCodeAt(this.index + 1)) {
@@ -970,11 +972,18 @@ export class Parser {
             code = code * 8 + (ch - 48);
             this.advance();
         }
+        if (this.flags & Flags.OptionsNext) {
 
+
+            if (ch === Chars.LowerN) {
+                bigInt = true;
+                this.advance();
+            }
+        }
         if (this.flags & Flags.OptionsRaw) this.tokenRaw = this.source.slice(this.startPos, this.index);
 
         this.tokenValue = code;
-        return Token.NumericLiteral;
+        return bigInt ? Token.BigIntLiteral : Token.NumericLiteral;
     }
 
     private scanOctalDigits(context: Context): Token {
@@ -1002,10 +1011,21 @@ export class Parser {
             this.advance();
         }
 
+        let bigInt = false;
+
+        if (this.flags & Flags.OptionsNext) {
+
+
+            if (ch === Chars.LowerN) {
+                bigInt = true;
+                this.advance();
+            }
+        }
         if (this.flags & Flags.OptionsRaw) this.tokenRaw = this.source.slice(this.startPos, this.index);
+
         this.tokenValue = code;
 
-        return Token.NumericLiteral;
+        return bigInt ? Token.BigIntLiteral : Token.NumericLiteral;
     }
 
     private scanHexadecimalDigit() {
@@ -1013,25 +1033,33 @@ export class Parser {
         this.advanceTwice();
 
         if (!this.hasNext()) this.error(Errors.ExpectedHexDigits);
-
-        let code = toHex(this.nextChar());
+        let ch = this.nextChar();
+        let code = toHex(ch);
+        let bigInt = false;
 
         if (code < 0) this.error(Errors.InvalidHexEscapeSequence);
 
         this.advance();
 
         while (this.hasNext()) {
-            const digit = toHex(this.nextChar());
+            ch = this.nextChar();
+            const digit = toHex(ch);
             if (digit < 0) break;
             code = code << 4 | digit;
             this.advance();
         }
 
+        if (this.flags & Flags.OptionsNext) {
+            if (ch === Chars.LowerN) {
+                bigInt = true;
+                this.advance();
+            }
+        }
         this.tokenValue = code;
 
         if (this.flags & Flags.OptionsRaw) this.tokenRaw = this.source.slice(this.startPos, this.index);
 
-        return Token.NumericLiteral;
+        return bigInt ? Token.BigIntLiteral : Token.NumericLiteral;
     }
 
     private scanBinaryDigits(context: Context): Token {
@@ -1040,7 +1068,7 @@ export class Parser {
 
         let ch = this.nextChar();
         let code = ch - Chars.Zero;
-
+        let bigInt = false;
         // Invalid:  '0b'
         if (ch !== Chars.Zero && ch !== Chars.One) this.error(Errors.InvalidBinaryDigit);
 
@@ -1054,10 +1082,16 @@ export class Parser {
             this.advance();
         }
 
+        if (this.flags & Flags.OptionsNext) {
+            if (ch === Chars.LowerN) {
+                bigInt = true;
+                this.advance();
+            }
+        }
         if (this.flags & Flags.OptionsRaw) this.tokenRaw = this.source.slice(this.startPos, this.index);
 
         this.tokenValue = code;
-        return Token.NumericLiteral;
+        return bigInt ? Token.BigIntLiteral : Token.NumericLiteral;
     }
 
     private skipDigits() {
@@ -1084,10 +1118,13 @@ export class Parser {
     private scanNumber(context: Context, ch: Chars): Token {
 
         const start = this.index;
+        let isBigInt = false;
+        let isFloat = false;
 
         this.skipDigits();
 
         if (this.nextChar() === Chars.Period) {
+            isFloat = true;
             this.advance();
             this.skipDigits();
         }
@@ -1095,8 +1132,15 @@ export class Parser {
         let end = this.index;
 
         switch (this.nextChar()) {
+            case Chars.LowerN:
+                if (this.flags & Flags.OptionsNext) {
+                    if (isFloat) this.error(Errors.Unexpected);
+                    this.advance();
+                    isBigInt = true;
+                }
             case Chars.UpperE:
             case Chars.LowerE:
+                isFloat = true;
                 this.advance();
                 switch (this.nextChar()) {
                     case Chars.Plus:
@@ -1123,7 +1167,7 @@ export class Parser {
 
         if (this.flags & Flags.OptionsRaw) this.tokenRaw = this.source.substring(start, end);
         this.tokenValue = parseFloat(this.source.substring(start, end));
-        return Token.NumericLiteral;
+        return isBigInt ? Token.BigIntLiteral : Token.NumericLiteral;
     }
 
     private scanRegularExpression(): Token {
@@ -4235,6 +4279,8 @@ export class Parser {
                         return this.parseRegularExpression(context);
                     default: // ignore
                 }
+            case Token.BigIntLiteral:
+                return this.parseBigIntLiteral(context);
             case Token.NumericLiteral:
             case Token.StringLiteral:
                 return this.parseLiteral(context);
@@ -4820,6 +4866,23 @@ export class Parser {
             type: 'Literal',
             value: value,
             regex
+        });
+
+        if (this.flags & Flags.OptionsRaw) node.raw = raw;
+
+        return node;
+    }
+
+    private parseBigIntLiteral(context: Context): ESTree.Literal {
+        const pos = this.getLocations();
+        const value = this.tokenValue;
+        const raw = this.tokenRaw;
+
+        this.expect(context, Token.BigIntLiteral);
+
+        const node = this.finishNode(pos, {
+            type: 'BigIntLiteral',
+            value
         });
 
         if (this.flags & Flags.OptionsRaw) node.raw = raw;

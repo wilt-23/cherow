@@ -10,6 +10,7 @@ Use `{ next: true }` to use this features. **Note** Use them at your own risk! T
 - Import()
 - Rest/Spread Properties
 - Optional catch binding
+- BigInt
 - Regular Expression's new DotAll flag
 
 **Note** Async generators are not included in this folder. They are so closely integrated with other tests.

@@ -30,6 +30,7 @@ A online demo can be found [here](https://cherow.github.io/cherow/).
 - Asynchronous Iteration
 - Rest/Spread Properties
 - Optional catch binding
+- BigInt
 - Regular Expression's new `DotAll` flag
 
 ## V8 experimental features

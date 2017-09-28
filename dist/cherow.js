@@ -382,7 +382,7 @@ var KeywordDescTable = [
     'implements', 'interface', 'package', 'private', 'protected', 'public', 'static', 'yield',
     /* Contextual keywords */
     'as', 'async', 'await', 'constructor', 'get', 'set', 'from', 'of',
-    'enum'
+    'enum', 'BigInt'
 ];
 /**
  * The conversion function between token and its string description/representation.
@@ -1335,6 +1335,7 @@ Parser.prototype.scanNumberLiteral = function scanNumberLiteral (context) {
         { this.error(7 /* StrictOctalEscape */); }
     this.advance();
     var ch = this.nextChar();
+    var bigInt = false;
     // Invalid:  '00o0', '00b0'
     switch (this.source.charCodeAt(this.index + 1)) {
         case 98 /* LowerB */:
@@ -1352,10 +1353,16 @@ Parser.prototype.scanNumberLiteral = function scanNumberLiteral (context) {
         code = code * 8 + (ch - 48);
         this$1.advance();
     }
+    if (this.flags & 4194304 /* OptionsNext */) {
+        if (ch === 110 /* LowerN */) {
+            bigInt = true;
+            this.advance();
+        }
+    }
     if (this.flags & 2097152 /* OptionsRaw */)
         { this.tokenRaw = this.source.slice(this.startPos, this.index); }
     this.tokenValue = code;
-    return 2 /* NumericLiteral */;
+    return bigInt ? 116 /* BigIntLiteral */ : 2 /* NumericLiteral */;
 };
 Parser.prototype.scanOctalDigits = function scanOctalDigits (context) {
         var this$1 = this;
@@ -1381,10 +1388,17 @@ Parser.prototype.scanOctalDigits = function scanOctalDigits (context) {
         code = (code << 3) | (ch - 48 /* Zero */);
         this$1.advance();
     }
+    var bigInt = false;
+    if (this.flags & 4194304 /* OptionsNext */) {
+        if (ch === 110 /* LowerN */) {
+            bigInt = true;
+            this.advance();
+        }
+    }
     if (this.flags & 2097152 /* OptionsRaw */)
         { this.tokenRaw = this.source.slice(this.startPos, this.index); }
     this.tokenValue = code;
-    return 2 /* NumericLiteral */;
+    return bigInt ? 116 /* BigIntLiteral */ : 2 /* NumericLiteral */;
 };
 Parser.prototype.scanHexadecimalDigit = function scanHexadecimalDigit () {
         var this$1 = this;
@@ -1392,21 +1406,30 @@ Parser.prototype.scanHexadecimalDigit = function scanHexadecimalDigit () {
     this.advanceTwice();
     if (!this.hasNext())
         { this.error(73 /* ExpectedHexDigits */); }
-    var code = toHex(this.nextChar());
+    var ch = this.nextChar();
+    var code = toHex(ch);
+    var bigInt = false;
     if (code < 0)
         { this.error(74 /* InvalidHexEscapeSequence */); }
     this.advance();
     while (this.hasNext()) {
-        var digit = toHex(this$1.nextChar());
+        ch = this$1.nextChar();
+        var digit = toHex(ch);
         if (digit < 0)
             { break; }
         code = code << 4 | digit;
         this$1.advance();
     }
+    if (this.flags & 4194304 /* OptionsNext */) {
+        if (ch === 110 /* LowerN */) {
+            bigInt = true;
+            this.advance();
+        }
+    }
     this.tokenValue = code;
     if (this.flags & 2097152 /* OptionsRaw */)
         { this.tokenRaw = this.source.slice(this.startPos, this.index); }
-    return 2 /* NumericLiteral */;
+    return bigInt ? 116 /* BigIntLiteral */ : 2 /* NumericLiteral */;
 };
 Parser.prototype.scanBinaryDigits = function scanBinaryDigits (context) {
         var this$1 = this;
@@ -1414,6 +1437,7 @@ Parser.prototype.scanBinaryDigits = function scanBinaryDigits (context) {
     this.advanceTwice();
     var ch = this.nextChar();
     var code = ch - 48;
+    var bigInt = false;
     // Invalid:  '0b'
     if (ch !== 48 /* Zero */ && ch !== 49 /* One */)
         { this.error(50 /* InvalidBinaryDigit */); }
@@ -1427,10 +1451,16 @@ Parser.prototype.scanBinaryDigits = function scanBinaryDigits (context) {
         code = (code << 1) | (ch - 48 /* Zero */);
         this$1.advance();
     }
+    if (this.flags & 4194304 /* OptionsNext */) {
+        if (ch === 110 /* LowerN */) {
+            bigInt = true;
+            this.advance();
+        }
+    }
     if (this.flags & 2097152 /* OptionsRaw */)
         { this.tokenRaw = this.source.slice(this.startPos, this.index); }
     this.tokenValue = code;
-    return 2 /* NumericLiteral */;
+    return bigInt ? 116 /* BigIntLiteral */ : 2 /* NumericLiteral */;
 };
 Parser.prototype.skipDigits = function skipDigits () {
         var this$1 = this;
@@ -1456,15 +1486,26 @@ Parser.prototype.skipDigits = function skipDigits () {
 };
 Parser.prototype.scanNumber = function scanNumber (context, ch) {
     var start = this.index;
+    var isBigInt = false;
+    var isFloat = false;
     this.skipDigits();
     if (this.nextChar() === 46 /* Period */) {
+        isFloat = true;
         this.advance();
         this.skipDigits();
     }
     var end = this.index;
     switch (this.nextChar()) {
+        case 110 /* LowerN */:
+            if (this.flags & 4194304 /* OptionsNext */) {
+                if (isFloat)
+                    { this.error(0 /* Unexpected */); }
+                this.advance();
+                isBigInt = true;
+            }
         case 69 /* UpperE */:
         case 101 /* LowerE */:
+            isFloat = true;
             this.advance();
             switch (this.nextChar()) {
                 case 43 /* Plus */:
@@ -1490,7 +1531,7 @@ Parser.prototype.scanNumber = function scanNumber (context, ch) {
     if (this.flags & 2097152 /* OptionsRaw */)
         { this.tokenRaw = this.source.substring(start, end); }
     this.tokenValue = parseFloat(this.source.substring(start, end));
-    return 2 /* NumericLiteral */;
+    return isBigInt ? 116 /* BigIntLiteral */ : 2 /* NumericLiteral */;
 };
 Parser.prototype.scanRegularExpression = function scanRegularExpression () {
         var this$1 = this;
@@ -4239,6 +4280,8 @@ Parser.prototype.parsePrimaryExpression = function parsePrimaryExpression (conte
                     return this.parseRegularExpression(context);
                 default: // ignore
             }
+        case 116 /* BigIntLiteral */:
+            return this.parseBigIntLiteral(context);
         case 2 /* NumericLiteral */:
         case 3 /* StringLiteral */:
             return this.parseLiteral(context);
@@ -4780,6 +4823,19 @@ Parser.prototype.parseRegularExpression = function parseRegularExpression (conte
         type: 'Literal',
         value: value,
         regex: regex
+    });
+    if (this.flags & 2097152 /* OptionsRaw */)
+        { node.raw = raw; }
+    return node;
+};
+Parser.prototype.parseBigIntLiteral = function parseBigIntLiteral (context) {
+    var pos = this.getLocations();
+    var value = this.tokenValue;
+    var raw = this.tokenRaw;
+    this.expect(context, 116 /* BigIntLiteral */);
+    var node = this.finishNode(pos, {
+        type: 'BigIntLiteral',
+        value: value
     });
     if (this.flags & 2097152 /* OptionsRaw */)
         { node.raw = raw; }
