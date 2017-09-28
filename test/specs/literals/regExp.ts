@@ -183,22 +183,218 @@ describe('Literals - RegExp', () => {
           });
     });
 
-    it('should parse "/[-\\-]/u"', () => {
-        expect(parseScript(`/[-\\-]/u`)).to.eql({
+    it('should parse "/(?:)/gi;"', () => {
+        expect(parseScript(`/(?:)/gi;`, {
+            raw: true,
+            ranges: true
+        })).to.eql({
             "type": "Program",
-            "body": [{
+            "start": 0,
+            "end": 9,
+            "body": [
+              {
+                "type": "ExpressionStatement",
+                "start": 0,
+                "end": 9,
+                "expression": {
+                  "type": "Literal",
+                  "start": 0,
+                  "end": 8,
+                  "value": /(?:)/gi,
+                  "raw": "/(?:)/gi",
+                  "regex": {
+                    "pattern": "(?:)",
+                    "flags": "gi"
+                  }
+                }
+              }
+            ],
+            "sourceType": "script"
+          });
+    });
+
+    it('should parse "/(?:)/gi;"', () => {
+        expect(parseScript(`/(?:)/gi;`, {
+            raw: true,
+            ranges: true
+        })).to.eql({
+            "type": "Program",
+            "start": 0,
+            "end": 9,
+            "body": [
+              {
+                "type": "ExpressionStatement",
+                "start": 0,
+                "end": 9,
+                "expression": {
+                  "type": "Literal",
+                  "start": 0,
+                  "end": 8,
+                  "value": /(?:)/gi,
+                  "raw": "/(?:)/gi",
+                  "regex": {
+                    "pattern": "(?:)",
+                    "flags": "gi"
+                  }
+                }
+              }
+            ],
+            "sourceType": "script"
+          });
+    });
+
+    it('should parse global flag', () => {
+        expect(parseScript(` /(?:)/m`, {
+            raw: true,
+            ranges: true
+        })).to.eql({
+            "type": "Program",
+            "start": 0,
+            "end": 8,
+            "body": [
+              {
+                "type": "ExpressionStatement",
+                "start": 1,
+                "end": 8,
+                "expression": {
+                  "type": "Literal",
+                  "start": 1,
+                  "end": 8,
+                  "value": /(?:)/m,
+                  "raw": "/(?:)/m",
+                  "regex": {
+                    "pattern": "(?:)",
+                    "flags": "m"
+                  }
+                }
+              }
+            ],
+            "sourceType": "script"
+          });
+    });
+
+    it('should parse ignore flag', () => {
+        expect(parseScript(` /(?:)/m`, {
+            raw: true,
+            ranges: true
+        })).to.eql({
+            "type": "Program",
+            "start": 0,
+            "end": 8,
+            "body": [
+              {
+                "type": "ExpressionStatement",
+                "start": 1,
+                "end": 8,
+                "expression": {
+                  "type": "Literal",
+                  "start": 1,
+                  "end": 8,
+                  "value": /(?:)/m,
+                  "raw": "/(?:)/m",
+                  "regex": {
+                    "pattern": "(?:)",
+                    "flags": "m"
+                  }
+                }
+              }
+            ],
+            "sourceType": "script"
+          });
+    });
+
+    it('should parse "/s\\u2029/"', () => {
+        expect(parseScript(`/s\\u2029/`, {
+            raw: true,
+            ranges: true
+        })).to.eql({
+            "type": "Program",
+            "start": 0,
+            "end": 9,
+            "body": [
+              {
+                "type": "ExpressionStatement",
+                "start": 0,
+                "end": 9,
+                "expression": {
+                  "type": "Literal",
+                  "start": 0,
+                  "end": 9,
+                  "value": /s\u2029/,
+                  "raw": "/s\\u2029/",
+                  "regex": {
+                    "pattern": "s\\u2029",
+                    "flags": ""
+                  }
+                }
+              }
+            ],
+            "sourceType": "script"
+          });
+    });
+
+
+    it('should parse "/a\\u000A/"', () => {
+        expect(parseScript(`/a\\u000A/`, {
+            raw: true,
+            ranges: true
+        })).to.eql({
+            "type": "Program",
+            "start": 0,
+            "end": 9,
+            "body": [
+              {
+                "type": "ExpressionStatement",
+                "start": 0,
+                "end": 9,
+                "expression": {
+                  "type": "Literal",
+                  "start": 0,
+                  "end": 9,
+                  "value": /a\u000A/,
+                  "raw": "/a\\u000A/",
+                  "regex": {
+                    "pattern": "a\\u000A",
+                    "flags": ""
+                  }
+                }
+              }
+            ],
+            "sourceType": "script"
+          });
+    });
+
+
+    it('should parse "/,\;/.source"', () => {
+        expect(parseScript(`/,\;/.source`, {
+            raw: true,
+            ranges: false
+        })).to.eql({
+            "type": "Program",
+            "body": [
+              {
                 "type": "ExpressionStatement",
                 "expression": {
+                  "type": "MemberExpression",
+                  "object": {
                     "type": "Literal",
-                    "value": /[-\-]/u,
+                    "value": /,;/,
+                    "raw": "/,;/",
                     "regex": {
-                        "pattern": "[-\\-]",
-                        "flags": "u"
+                        "pattern": ",;",
+                      "flags": ""
                     }
+                  },
+                  "property": {
+                    "type": "Identifier",
+                    "name": "source"
+                  },
+                  "computed": false
                 }
-            }],
+              }
+            ],
             "sourceType": "script"
-        });
+          });
     });
 
     it('should parse "/\\1/u"', () => {

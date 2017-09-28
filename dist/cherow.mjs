@@ -1567,7 +1567,6 @@ Parser.prototype.scanRegularExpression = function scanRegularExpression () {
                     mask |= 32 /* DotAll */;
                     break;
                 }
-            // falls through
             default:
                 if (code >= 0xd800 && code <= 0xdc00)
                     { code = this$1.nextUnicodeChar(); }
@@ -1578,6 +1577,7 @@ Parser.prototype.scanRegularExpression = function scanRegularExpression () {
         index++;
         this$1.column++;
     }
+    this.endPos = this.index;
     this.index = index;
     var pattern = this.source.slice(bodyStart, bodyEnd);
     var flags = this.source.slice(flagsStart, this.index);
@@ -3301,8 +3301,7 @@ Parser.prototype.parseBinaryExpression = function parseBinaryExpression (context
         this$1.nextToken(context);
         expression = this$1.finishNode(pos, {
             type: (binaryOperator === 1049143 /* LogicalAnd */ || binaryOperator === 1048888 /* LogicalOr */) ?
-                'LogicalExpression' :
-                'BinaryExpression',
+                'LogicalExpression' : 'BinaryExpression',
             left: expression,
             right: this$1.parseBinaryExpression(context, binaryPrecedence, pos),
             operator: tokenDesc(binaryOperator)
@@ -4314,6 +4313,9 @@ Parser.prototype.parsePrimaryExpression = function parsePrimaryExpression (conte
         case 12369 /* DoKeyword */:
             if (this.flags & 33554432 /* OptionsV8 */)
                 { return this.parseDoExpression(context); }
+        case 12383 /* ThrowKeyword */:
+            if (this.flags & 4194304 /* OptionsNext */)
+                { return this.parseThrowExpression(context); }
         case 65644 /* AsyncKeyword */:
             if (this.nextTokenIsFunctionKeyword(context))
                 { return this.parseFunctionExpression(context); }
@@ -4371,6 +4373,14 @@ Parser.prototype.parsePrimaryExpression = function parsePrimaryExpression (conte
         default:
             return this.parseIdentifierOrArrow(context & ~1024 /* Parenthesis */, pos);
     }
+};
+Parser.prototype.parseThrowExpression = function parseThrowExpression (context) {
+    var pos = this.getLocations();
+    this.nextToken(context);
+    return this.finishNode(pos, {
+        type: 'ThrowExpression',
+        expressions: this.buildUnaryExpression(context)
+    });
 };
 // NOTE! By doing it this way we are about 67% faster than Esprima, and 83% faster
 // than Acorn in micro-benchmarks. And we hit the 3 mill ops/sec milestone in

@@ -7,7 +7,6 @@ import { Token, tokenDesc, descKeyword } from './token';
 import { isValidIdentifierStart, isIdentifierStart, isIdentifierPart } from './unicode';
 import { Options, SavedState, CollectComments, ErrorLocation, Location } from './interface';
 
-
 export class Parser {
     private readonly source: string;
     private index: number;
@@ -1216,7 +1215,7 @@ export class Parser {
                             mask |= RegExpFlag.DotAll;
                             break;
                         }
-                        // falls through
+
                     default:
                         if (code >= 0xd800 && code <= 0xdc00) code = this.nextUnicodeChar();
                         if (!isIdentifierPart(code)) break loop;
@@ -1226,7 +1225,9 @@ export class Parser {
                 this.column++;
             }
 
+        this.endPos = this.index;
         this.index = index;
+
 
         const pattern = this.source.slice(bodyStart, bodyEnd);
         const flags = this.source.slice(flagsStart, this.index);
@@ -3204,9 +3205,8 @@ export class Parser {
             this.nextToken(context);
 
             expression = this.finishNode(pos, {
-                type: (binaryOperator === Token.LogicalAnd || binaryOperator === Token.LogicalOr) ? 
-                'LogicalExpression' : 
-                'BinaryExpression',
+                type: (binaryOperator === Token.LogicalAnd || binaryOperator === Token.LogicalOr) ?
+                    'LogicalExpression' : 'BinaryExpression',
                 left: expression,
                 right: this.parseBinaryExpression(context, binaryPrecedence, pos),
                 operator: tokenDesc(binaryOperator)
@@ -3252,7 +3252,7 @@ export class Parser {
             // Assignment operator(12.15) or of a PostfixExpression or as the UnaryExpression
             // operated upon by a Prefix Increment(12.4.6) or a Prefix Decrement(12.4.7) operator.
             if (context & Context.Strict && this.isEvalOrArguments((expr as ESTree.Identifier).name)) {
-                this.error(Errors.StrictLHSPostfix);    
+                this.error(Errors.StrictLHSPostfix);
             }
 
             if (!isValidSimpleAssignmentTarget(expr)) this.error(Errors.InvalidLHSInAssignment);
@@ -4332,6 +4332,8 @@ export class Parser {
                 return this.parseSuper(context);
             case Token.DoKeyword:
                 if (this.flags & Flags.OptionsV8) return this.parseDoExpression(context);
+            case Token.ThrowKeyword:
+            if (this.flags & Flags.OptionsNext) return this.parseThrowExpression(context);
             case Token.AsyncKeyword:
                 if (this.nextTokenIsFunctionKeyword(context)) return this.parseFunctionExpression(context);
 
@@ -4385,6 +4387,15 @@ export class Parser {
             default:
                 return this.parseIdentifierOrArrow(context & ~Context.Parenthesis, pos);
         }
+    }
+
+    private parseThrowExpression(context: Context) {
+        const pos = this.getLocations();
+        this.nextToken(context);
+        return this.finishNode(pos, {
+            type: 'ThrowExpression',
+            expressions: this.buildUnaryExpression(context)
+        });
     }
 
     // NOTE! By doing it this way we are about 67% faster than Esprima, and 83% faster
