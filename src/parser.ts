@@ -336,8 +336,6 @@ export class Parser {
                     {
                         this.advance();
 
-                        if (!this.hasNext()) return Token.Divide;
-
                         switch (this.nextChar()) {
                             case Chars.Slash:
                                 this.advance();
@@ -359,8 +357,6 @@ export class Parser {
                 case Chars.LessThan:
                     {
                         this.advance();
-
-                        if (!this.hasNext()) return Token.LessThan;
 
                         if (!(context & Context.Module) &&
                             this.consume(Chars.Exclamation) &&
@@ -388,15 +384,10 @@ export class Parser {
 
                                 case Chars.Slash:
                                     {
+
                                         if (!(this.flags & Flags.OptionsJSX)) break;
-
-                                        const index = this.index + 1;
-
-                                        if (index < this.source.length) {
-                                            const next = this.source.charCodeAt(index);
-                                            if (next === Chars.Asterisk || next === Chars.Slash) break;
-                                        }
-
+                                        const next = this.source.charCodeAt(this.index + 1);
+                                        if (next === Chars.Asterisk || next === Chars.Slash) break;
                                         this.advance();
                                         return Token.JSXClose;
                                     }
@@ -612,8 +603,6 @@ export class Parser {
                         // Fixes '<a>= == =</a>'
                         if (context & Context.JSXChild) return Token.GreaterThan;
 
-                        if (!this.hasNext()) return Token.GreaterThan;
-
                         let next = this.nextChar();
 
                         if (next === Chars.EqualSign) {
@@ -624,19 +613,19 @@ export class Parser {
                         if (next !== Chars.GreaterThan) return Token.GreaterThan;
                         this.advance();
 
-                            next = this.nextChar();
+                        next = this.nextChar();
 
-                            if (next === Chars.GreaterThan) {
-                                this.advance();
-                                if (this.consume(Chars.EqualSign)) {
-                                    return Token.LogicalShiftRightAssign;
-                                } else {
-                                    return Token.LogicalShiftRight;
-                                }
-                            } else if (next === Chars.EqualSign) {
-                                this.advance();
-                                return Token.ShiftRightAssign;
+                        if (next === Chars.GreaterThan) {
+                            this.advance();
+                            if (this.consume(Chars.EqualSign)) {
+                                return Token.LogicalShiftRightAssign;
+                            } else {
+                                return Token.LogicalShiftRight;
                             }
+                        } else if (next === Chars.EqualSign) {
+                            this.advance();
+                            return Token.ShiftRightAssign;
+                        }
 
                         return Token.ShiftRight;
                     }
@@ -663,6 +652,7 @@ export class Parser {
                 case Chars.Period:
                     {
                         let index = this.index + 1;
+
                         if (index < this.source.length) {
                             const next = this.source.charCodeAt(index);
                             if (next >= Chars.Zero && next <= Chars.Nine) {

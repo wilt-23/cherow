@@ -43,6 +43,38 @@ computerm and that these results are for the technically interested only.
 
 ### Micro benchmarks
 
+
+#### JSX
+
+**<span/>**
+
+- Cherow  x 1,330,443 ops/sec ±2.33% (90 runs sampled)
+- Esprima x 560,163 ops/sec ±6.20% (80 runs sampled)
+- Acorn x 119,288 ops/sec ±8.05% (87 runs sampled)
+- Fastest is Cherow
+
+**<input disabled />**
+
+- Cherow  x 831,651 ops/sec ±0.38% (94 runs sampled)
+- Esprima x 224,494 ops/sec ±4.11% (78 runs sampled)
+- Acorn x 117,329 ops/sec ±2.45% (85 runs sampled)
+- Fastest is Cherow
+
+**function *g() { yield <h1>Hello</h1> }**
+
+- Cherow  x 170,258 ops/sec ±3.36% (81 runs sampled)
+- Esprima x 83,754 ops/sec ±4.06% (83 runs sampled)
+- Acorn x **Acorn fail to parse this one**
+- Fastest is Cherow
+
+**<strong><em></em></strong>**
+
+- Cherow  x 429,999 ops/sec ±2.05% (90 runs sampled)
+- Esprima x 146,011 ops/sec ±2.57% (85 runs sampled)
+- Acorn x 89,173 ops/sec ±4.58% (83 runs sampled)
+- Fastest is Cherow
+
+
 #### Async functions
 
 **async a => b**

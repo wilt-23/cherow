@@ -770,8 +770,6 @@ Parser.prototype.scanToken = function scanToken (context) {
             case 47 /* Slash */:
                 {
                     this$1.advance();
-                    if (!this$1.hasNext())
-                        { return 1051189 /* Divide */; }
                     switch (this$1.nextChar()) {
                         case 47 /* Slash */:
                             this$1.advance();
@@ -792,8 +790,6 @@ Parser.prototype.scanToken = function scanToken (context) {
             case 60 /* LessThan */:
                 {
                     this$1.advance();
-                    if (!this$1.hasNext())
-                        { return 1050431 /* LessThan */; }
                     if (!(context & 1 /* Module */) &&
                         this$1.consume(33 /* Exclamation */) &&
                         this$1.consume(45 /* Hyphen */) &&
@@ -820,12 +816,9 @@ Parser.prototype.scanToken = function scanToken (context) {
                                 {
                                     if (!(this$1.flags & 1048576 /* OptionsJSX */))
                                         { break; }
-                                    var index = this$1.index + 1;
-                                    if (index < this$1.source.length) {
-                                        var next = this$1.source.charCodeAt(index);
-                                        if (next === 42 /* Asterisk */ || next === 47 /* Slash */)
-                                            { break; }
-                                    }
+                                    var next = this$1.source.charCodeAt(this$1.index + 1);
+                                    if (next === 42 /* Asterisk */ || next === 47 /* Slash */)
+                                        { break; }
                                     this$1.advance();
                                     return 25 /* JSXClose */;
                                 }
@@ -1017,8 +1010,6 @@ Parser.prototype.scanToken = function scanToken (context) {
                     // Fixes '<a>= == =</a>'
                     if (context & 16 /* JSXChild */)
                         { return 1050432 /* GreaterThan */; }
-                    if (!this$1.hasNext())
-                        { return 1050432 /* GreaterThan */; }
                     var next$6 = this$1.nextChar();
                     if (next$6 === 61 /* EqualSign */) {
                         this$1.advance();
@@ -1061,19 +1052,19 @@ Parser.prototype.scanToken = function scanToken (context) {
             // '.'
             case 46 /* Period */:
                 {
-                    var index$1 = this$1.index + 1;
-                    if (index$1 < this$1.source.length) {
-                        var next$8 = this$1.source.charCodeAt(index$1);
+                    var index = this$1.index + 1;
+                    if (index < this$1.source.length) {
+                        var next$8 = this$1.source.charCodeAt(index);
                         if (next$8 >= 48 /* Zero */ && next$8 <= 57 /* Nine */) {
                             // Rewind the initial token.
                             this$1.scanNumber(context, first);
                             return 2 /* NumericLiteral */;
                         }
                         else if (next$8 === 46 /* Period */) {
-                            index$1++;
-                            if (index$1 < this$1.source.length &&
-                                this$1.source.charCodeAt(index$1) === 46 /* Period */) {
-                                this$1.index = index$1 + 1;
+                            index++;
+                            if (index < this$1.source.length &&
+                                this$1.source.charCodeAt(index) === 46 /* Period */) {
+                                this$1.index = index + 1;
                                 this$1.column += 3;
                                 return 14 /* Ellipsis */;
                             }
@@ -1085,9 +1076,9 @@ Parser.prototype.scanToken = function scanToken (context) {
             // '0'
             case 48 /* Zero */:
                 {
-                    var index$2 = this$1.index + 1;
-                    if (index$2 + 1 < this$1.source.length) {
-                        switch (this$1.source.charCodeAt(index$2)) {
+                    var index$1 = this$1.index + 1;
+                    if (index$1 + 1 < this$1.source.length) {
+                        switch (this$1.source.charCodeAt(index$1)) {
                             case 120 /* LowerX */:
                             case 88 /* UpperX */:
                                 return this$1.scanHexadecimalDigit();
@@ -1100,8 +1091,8 @@ Parser.prototype.scanToken = function scanToken (context) {
                             default: // ignore
                         }
                     }
-                    var ch = this$1.source.charCodeAt(index$2);
-                    if (index$2 < this$1.source.length && ch >= 48 /* Zero */ && ch <= 55 /* Seven */) {
+                    var ch = this$1.source.charCodeAt(index$1);
+                    if (index$1 < this$1.source.length && ch >= 48 /* Zero */ && ch <= 55 /* Seven */) {
                         return this$1.scanNumberLiteral(context);
                     }
                 }
