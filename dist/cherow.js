@@ -1510,8 +1510,7 @@ Parser.prototype.scanRegularExpression = function scanRegularExpression () {
                 case 47 /* Slash */:
                     if (!preparseState)
                         { break loop; }
-                    else
-                        { break; }
+                    break;
                 case 92 /* Backslash */:
                     preparseState |= 1 /* Escape */;
                     break;
@@ -2005,6 +2004,9 @@ Parser.prototype.expect = function expect (context, t) {
     if (this.token !== t)
         { this.error(0 /* Unexpected */); }
     this.nextToken(context);
+};
+Parser.prototype.isEvalOrArguments = function isEvalOrArguments (value) {
+    return value === 'eval' || value === 'arguments';
 };
 Parser.prototype.canConsumeSemicolon = function canConsumeSemicolon () {
     // Bail out quickly if we have seen a LineTerminator
@@ -3173,6 +3175,8 @@ Parser.prototype.parseUnaryExpression = function parseUnaryExpression (context) 
             { return this.parseAwaitExpression(context, pos); }
         var token = this.token;
         expr = this.parseSimpleUnaryExpression(context);
+        // When a delete operator occurs within strict mode code, a SyntaxError is thrown if its
+        // UnaryExpression is a direct reference to a variable, function argument, or function name
         if (context & 2 /* Strict */ && token === 2109483 /* DeleteKeyword */ && expr.argument.type === 'Identifier') {
             this.error(52 /* StrictDelete */);
         }
@@ -3255,57 +3259,46 @@ Parser.prototype.parseBinaryExpression = function parseBinaryExpression (context
     }
     return expression;
 };
-Parser.prototype.isEvalOrArguments = function isEvalOrArguments (value) {
-    return value === 'eval' || value === 'arguments';
-};
 Parser.prototype.parseUpdateExpression = function parseUpdateExpression (context, pos) {
-    var argument;
+    var expr;
     if (hasMask(this.token, 262144 /* UpdateOperator */)) {
         var operator = this.token;
         this.nextToken(context);
-        argument = this.parseLeftHandSideExpression(context, pos);
-        if (context & 2 /* Strict */) {
-            // When a delete operator occurs within strict mode code, a SyntaxError is thrown if its
-            // UnaryExpression is a direct reference to a variable, function argument, or function name
-            if (operator === 2109483 /* DeleteKeyword */ && argument.type === 'Identifier')
-                { this.error(52 /* StrictDelete */); }
-            // The identifier eval or arguments may not appear as the LeftHandSideExpression of an
-            // Assignment operator(12.15) or of a PostfixExpression or as the UnaryExpression
-            // operated upon by a Prefix Increment(12.4.6) or a Prefix Decrement(12.4.7) operator
-            if ((operator === 262172 /* Decrement */ || operator === 262171 /* Increment */) && this.isEvalOrArguments(argument.name)) {
-                this.error(53 /* StrictLHSPrefix */);
-            }
+        expr = this.parseLeftHandSideExpression(context, pos);
+        if (context & 2 /* Strict */ && this.isEvalOrArguments(expr.name)) {
+            this.error(53 /* StrictLHSPrefix */);
         }
-        else if (!isValidSimpleAssignmentTarget(argument))
+        else if (!isValidSimpleAssignmentTarget(expr))
             { this.error(40 /* InvalidLHSInAssignment */); }
         return this.finishNode(pos, {
             type: 'UpdateExpression',
             operator: tokenDesc(operator),
             prefix: true,
-            argument: argument
+            argument: expr
         });
     }
-    if (this.flags & 1048576 /* OptionsJSX */ && this.token === 1050431 /* LessThan */)
-        { return this.parseJSXElement(context | 16 /* JSXChild */); }
-    argument = this.parseLeftHandSideExpression(context, pos);
-    if (!(this.flags & 1 /* LineTerminator */) && (this.token === 262171 /* Increment */ || this.token === 262172 /* Decrement */)) {
+    if (this.flags & 1048576 /* OptionsJSX */ && this.token === 1050431 /* LessThan */) {
+        return this.parseJSXElement(context | 16 /* JSXChild */);
+    }
+    expr = this.parseLeftHandSideExpression(context, pos);
+    if (hasMask(this.token, 262144 /* UpdateOperator */) && !(this.flags & 1 /* LineTerminator */)) {
         // The identifier eval or arguments may not appear as the LeftHandSideExpression of an
         // Assignment operator(12.15) or of a PostfixExpression or as the UnaryExpression
         // operated upon by a Prefix Increment(12.4.6) or a Prefix Decrement(12.4.7) operator.
-        if (context & 2 /* Strict */ && this.isEvalOrArguments(argument.name))
+        if (context & 2 /* Strict */ && this.isEvalOrArguments(expr.name))
             { this.error(54 /* StrictLHSPostfix */); }
-        if (!isValidSimpleAssignmentTarget(argument))
+        if (!isValidSimpleAssignmentTarget(expr))
             { this.error(40 /* InvalidLHSInAssignment */); }
         var operator$1 = this.token;
         this.nextToken(context);
         return this.finishNode(pos, {
             type: 'UpdateExpression',
-            argument: argument,
+            argument: expr,
             operator: tokenDesc(operator$1),
             prefix: false
         });
     }
-    return argument;
+    return expr;
 };
 Parser.prototype.parseImportCall = function parseImportCall (context, pos) {
     this.expect(context, 12377 /* ImportKeyword */);

@@ -5,8 +5,8 @@ const expect = chai.expect;
 
 describe('Espressions - Postfix', () => {
 
-    it('should parse "x++"', () => {
-        expect(parseScript('x++', {
+    it('should parse "++x"', () => {
+        expect(parseScript('++x', {
             locations: true,
             ranges: true,
             raw: true
@@ -54,19 +54,19 @@ describe('Espressions - Postfix', () => {
                     }
                   },
                   "operator": "++",
-                  "prefix": false,
+                  "prefix": true,
                   "argument": {
                     "type": "Identifier",
-                    "start": 0,
-                    "end": 1,
+                    "start": 2,
+                    "end": 3,
                     "loc": {
                       "start": {
                         "line": 1,
-                        "column": 0
+                        "column": 2
                       },
                       "end": {
                         "line": 1,
-                        "column": 1
+                        "column": 3
                       }
                     },
                     "name": "x"
@@ -78,8 +78,8 @@ describe('Espressions - Postfix', () => {
           });
     });
 
-    it('should parse "x--"', () => {
-        expect(parseScript('x--', {
+    it('should parse "--x"', () => {
+        expect(parseScript('--x', {
             locations: true,
             ranges: true,
             raw: true
@@ -127,19 +127,19 @@ describe('Espressions - Postfix', () => {
                     }
                   },
                   "operator": "--",
-                  "prefix": false,
+                  "prefix": true,
                   "argument": {
                     "type": "Identifier",
-                    "start": 0,
-                    "end": 1,
+                    "start": 2,
+                    "end": 3,
                     "loc": {
                       "start": {
                         "line": 1,
-                        "column": 0
+                        "column": 2
                       },
                       "end": {
                         "line": 1,
-                        "column": 1
+                        "column": 3
                       }
                     },
                     "name": "x"
@@ -151,87 +151,76 @@ describe('Espressions - Postfix', () => {
           });
     });
 
-    it('should parse "eval++"', () => {
-        expect(parseScript('eval++')).to.eql({
+    it('should parse "++eval"', () => {
+        expect(parseScript('++eval', {
+            locations: true,
+            ranges: true,
+            raw: true
+        })).to.eql({
             "type": "Program",
+            "start": 0,
+            "end": 6,
+            "loc": {
+              "start": {
+                "line": 1,
+                "column": 0
+              },
+              "end": {
+                "line": 1,
+                "column": 6
+              }
+            },
             "body": [
-                {
-                    "type": "ExpressionStatement",
-                    "expression": {
-                        "type": "UpdateExpression",
-                        "operator": "++",
-                        "argument": {
-                            "type": "Identifier",
-                            "name": "eval"
-                        },
-                        "prefix": false
+              {
+                "type": "ExpressionStatement",
+                "start": 0,
+                "end": 6,
+                "loc": {
+                  "start": {
+                    "line": 1,
+                    "column": 0
+                  },
+                  "end": {
+                    "line": 1,
+                    "column": 6
+                  }
+                },
+                "expression": {
+                  "type": "UpdateExpression",
+                  "start": 0,
+                  "end": 6,
+                  "loc": {
+                    "start": {
+                      "line": 1,
+                      "column": 0
+                    },
+                    "end": {
+                      "line": 1,
+                      "column": 6
                     }
+                  },
+                  "operator": "++",
+                  "prefix": true,
+                  "argument": {
+                    "type": "Identifier",
+                    "start": 2,
+                    "end": 6,
+                    "loc": {
+                      "start": {
+                        "line": 1,
+                        "column": 2
+                      },
+                      "end": {
+                        "line": 1,
+                        "column": 6
+                      }
+                    },
+                    "name": "eval"
+                  }
                 }
+              }
             ],
             "sourceType": "script"
-        });
-    });
-
-    it('should parse "eval--"', () => {
-        expect(parseScript('eval--')).to.eql({
-            "type": "Program",
-            "body": [
-                {
-                    "type": "ExpressionStatement",
-                    "expression": {
-                        "type": "UpdateExpression",
-                        "operator": "--",
-                        "argument": {
-                            "type": "Identifier",
-                            "name": "eval"
-                        },
-                        "prefix": false
-                    }
-                }
-            ],
-            "sourceType": "script"
-        });
-    });
-
-    it('should parse "arguments++"', () => {
-        expect(parseScript('arguments++')).to.eql({
-            "type": "Program",
-            "body": [
-                {
-                    "type": "ExpressionStatement",
-                    "expression": {
-                        "type": "UpdateExpression",
-                        "operator": "++",
-                        "argument": {
-                            "type": "Identifier",
-                            "name": "arguments"
-                        },
-                        "prefix": false
-                    }
-                }
-            ],
-            "sourceType": "script"
-        });
-    });
-
-    it('should parse "arguments--"', () => {
-        expect(parseScript('arguments--')).to.eql({
-            "type": "Program",
-            "body": [
-                {
-                    "type": "ExpressionStatement",
-                    "expression": {
-                        "type": "UpdateExpression",
-                        "operator": "--",
-                        "argument": {
-                            "type": "Identifier",
-                            "name": "arguments"
-                        },
-                        "prefix": false
-                    }
-                }
-            ],
-            "sourceType": "script"
-        });
+          });
     });
 });

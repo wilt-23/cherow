@@ -140,6 +140,7 @@ interface T_Expression {
     'ConditionalExpression': ConditionalExpression;
     'CallExpression': CallExpression;
     'NewExpression': NewExpression;
+    'Import': Import;
     'SequenceExpression': SequenceExpression;
     'ArrowFunctionExpression': ArrowFunctionExpression;
     'YieldExpression': YieldExpression;
@@ -169,6 +170,7 @@ export type Expression =
     | CallExpression
     | NewExpression
     | SequenceExpression
+    | Import
     | ArrowFunctionExpression
     | YieldExpression
     | TemplateLiteral
@@ -539,6 +541,9 @@ export interface RestElement extends _Pattern<'RestElement'> {
 
 export interface ReturnStatement extends _Statement<'ReturnStatement'> {
     argument: Expression | null;
+}
+
+export interface ImportExpression extends _Expression<'Import'> {
 }
 
 export interface SequenceExpression extends _Expression<'SequenceExpression'> {

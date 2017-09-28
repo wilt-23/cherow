@@ -1145,7 +1145,7 @@ export class Parser {
                     switch (ch) {
                         case Chars.Slash:
                             if (!preparseState) break loop;
-                            else break;
+                            break;
                         case Chars.Backslash:
                             preparseState |= RegExpState.Escape;
                             break;
@@ -1697,6 +1697,10 @@ export class Parser {
     private expect(context: Context, t: Token) {
         if (this.token !== t) this.error(Errors.Unexpected);
         this.nextToken(context);
+    }
+
+    private isEvalOrArguments(value: string): boolean {
+        return value === 'eval' || value === 'arguments';
     }
 
     private canConsumeSemicolon(): boolean {
@@ -3053,6 +3057,8 @@ export class Parser {
             if (context & Context.Await && this.token === Token.AwaitKeyword) return this.parseAwaitExpression(context, pos);
             const token = this.token;
             expr = this.parseSimpleUnaryExpression(context);
+            // When a delete operator occurs within strict mode code, a SyntaxError is thrown if its
+            // UnaryExpression is a direct reference to a variable, function argument, or function name
             if (context & Context.Strict && token === Token.DeleteKeyword && expr.argument.type === 'Identifier') {
                 this.error(Errors.StrictDelete);
             }
@@ -3143,52 +3149,44 @@ export class Parser {
         return expression;
     }
 
-    private isEvalOrArguments(value: string): boolean {
-        return value === 'eval' || value === 'arguments';
-    }
-
     private parseUpdateExpression(context: Context, pos: Location): ESTree.Expression {
-        let argument: any;
+
+        let expr: ESTree.Expression;
+
         if (hasMask(this.token, Token.UpdateOperator)) {
 
             const operator = this.token;
 
             this.nextToken(context);
 
-            argument = this.parseLeftHandSideExpression(context, pos);
+            expr = this.parseLeftHandSideExpression(context, pos);
 
-            if (context & Context.Strict) {
-                // When a delete operator occurs within strict mode code, a SyntaxError is thrown if its
-                // UnaryExpression is a direct reference to a variable, function argument, or function name
-                if (operator === Token.DeleteKeyword && argument.type === 'Identifier') this.error(Errors.StrictDelete);
-                // The identifier eval or arguments may not appear as the LeftHandSideExpression of an
-                // Assignment operator(12.15) or of a PostfixExpression or as the UnaryExpression
-                // operated upon by a Prefix Increment(12.4.6) or a Prefix Decrement(12.4.7) operator
-                if ((operator === Token.Decrement || operator === Token.Increment) && this.isEvalOrArguments(argument.name)) {
-                    this.error(Errors.StrictLHSPrefix);
-                }
-            } else if (!isValidSimpleAssignmentTarget(argument)) this.error(Errors.InvalidLHSInAssignment);
+            if (context & Context.Strict && this.isEvalOrArguments((expr as ESTree.Identifier).name)) {
+                this.error(Errors.StrictLHSPrefix);
+            } else if (!isValidSimpleAssignmentTarget(expr)) this.error(Errors.InvalidLHSInAssignment);
 
             return this.finishNode(pos, {
                 type: 'UpdateExpression',
                 operator: tokenDesc(operator),
                 prefix: true,
-                argument
+                argument: expr
             });
         }
 
-        if (this.flags & Flags.OptionsJSX && this.token === Token.LessThan) return this.parseJSXElement(context | Context.JSXChild);
+        if (this.flags & Flags.OptionsJSX && this.token === Token.LessThan) {
+            return this.parseJSXElement(context | Context.JSXChild);
+        }
 
-        argument = this.parseLeftHandSideExpression(context, pos);
+        expr = this.parseLeftHandSideExpression(context, pos);
 
-        if (!(this.flags & Flags.LineTerminator) && (this.token === Token.Increment || this.token === Token.Decrement)) {
+        if (hasMask(this.token, Token.UpdateOperator) && !(this.flags & Flags.LineTerminator)) {
 
             // The identifier eval or arguments may not appear as the LeftHandSideExpression of an
             // Assignment operator(12.15) or of a PostfixExpression or as the UnaryExpression
             // operated upon by a Prefix Increment(12.4.6) or a Prefix Decrement(12.4.7) operator.
-            if (context & Context.Strict && this.isEvalOrArguments(argument.name)) this.error(Errors.StrictLHSPostfix);
+            if (context & Context.Strict && this.isEvalOrArguments((expr as ESTree.Identifier).name)) this.error(Errors.StrictLHSPostfix);
 
-            if (!isValidSimpleAssignmentTarget(argument)) this.error(Errors.InvalidLHSInAssignment);
+            if (!isValidSimpleAssignmentTarget(expr)) this.error(Errors.InvalidLHSInAssignment);
 
             const operator = this.token;
 
@@ -3196,16 +3194,16 @@ export class Parser {
 
             return this.finishNode(pos, {
                 type: 'UpdateExpression',
-                argument,
+                argument: expr,
                 operator: tokenDesc(operator),
                 prefix: false
             });
         }
 
-        return argument;
+        return expr;
     }
 
-    private parseImportCall(context: Context, pos: Location): ESTree.Expression {
+    private parseImportCall(context: Context, pos: Location): ESTree.Import {
         this.expect(context, Token.ImportKeyword);
         // Invalid: 'function failsParse() { return import.then(); }'
         if (this.token !== Token.LeftParen) this.error(Errors.UnexpectedToken, tokenDesc(this.token));
@@ -3214,7 +3212,7 @@ export class Parser {
         });
     }
 
-    private parseLeftHandSideExpression(context: Context, pos: Location): ESTree.Expression {
+    private parseLeftHandSideExpression(context: Context, pos: Location): ESTree.Expression | ESTree.Import {
         switch (this.token) {
             case Token.ImportKeyword:
                 if (!(this.flags & Flags.OptionsNext)) this.error(Errors.UnexpectedToken, tokenDesc(this.token));
