@@ -840,24 +840,4 @@ describe('Next - Throw expression', () => {
             "end": 54
         });
     });
-
-    it('should parse with comma', () => {
-        expect(parseScript(`function test() {
-              (throw 1, 2);
-            }`, {
-            raw: true,
-            ranges: true,
-            next: true
-        })).to.eql({});
-    });
-
-    it('should parse with comma', () => {
-        expect(parseScript(`function test() {
-              (throw 1, 2);
-            }`, {
-            raw: true,
-            ranges: true,
-            next: true
-        })).to.eql({});
-    });
 });
