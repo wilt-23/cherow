@@ -507,7 +507,6 @@ export class Parser {
                 case Chars.Ampersand:
                     {
                         this.advance();
-                        if (!this.hasNext()) return Token.BitwiseAnd;
 
                         const next = this.nextChar();
 
@@ -625,7 +624,6 @@ export class Parser {
                         if (next !== Chars.GreaterThan) return Token.GreaterThan;
                         this.advance();
 
-                        if (this.hasNext()) {
                             next = this.nextChar();
 
                             if (next === Chars.GreaterThan) {
@@ -639,7 +637,6 @@ export class Parser {
                                 this.advance();
                                 return Token.ShiftRightAssign;
                             }
-                        }
 
                         return Token.ShiftRight;
                     }
@@ -648,8 +645,6 @@ export class Parser {
                 case Chars.VerticalBar:
                     {
                         this.advance();
-
-                        if (!this.hasNext()) return Token.BitwiseOr;
 
                         const next = this.nextChar();
 
@@ -670,8 +665,11 @@ export class Parser {
                         let index = this.index + 1;
                         if (index < this.source.length) {
                             const next = this.source.charCodeAt(index);
-
-                            if (next === Chars.Period) {
+                            if (next >= Chars.Zero && next <= Chars.Nine) {
+                                // Rewind the initial token.
+                                this.scanNumber(context, first);
+                                return Token.NumericLiteral;
+                            } else if (next === Chars.Period) {
                                 index++;
                                 if (index < this.source.length &&
                                     this.source.charCodeAt(index) === Chars.Period) {
@@ -679,10 +677,6 @@ export class Parser {
                                     this.column += 3;
                                     return Token.Ellipsis;
                                 }
-                            } else if (next >= Chars.Zero && next <= Chars.Nine) {
-                                // Rewind the initial token.
-                                this.scanNumber(context, first);
-                                return Token.NumericLiteral;
                             }
                         }
 
@@ -3055,7 +3049,7 @@ export class Parser {
         });
     }
 
-    private getBinaryPrecedence(context: Context): any {
+    private getBinaryPrecedence(context: Context): number {
         if (hasMask(this.token, Token.BinaryOperator)) return this.token & Token.Precedence;
         return 0;
     }
@@ -3066,7 +3060,6 @@ export class Parser {
         let expr: any;
 
         if (hasMask(this.token, Token.UnaryOperator)) {
-
             if (context & Context.Await && this.token === Token.AwaitKeyword) return this.parseAwaitExpression(context, pos);
             const token = this.token;
             expr = this.parseSimpleUnaryExpression(context);

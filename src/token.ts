@@ -202,11 +202,7 @@ const KeywordDescTable = [
  * The conversion function between token and its string description/representation.
  */
 export function tokenDesc(token: Token): string {
-    if ((token & Token.Type) < KeywordDescTable.length) {
         return KeywordDescTable[token & Token.Type];
-    } else {
-        throw new Error('unreachable');
-    }
 }
 
 // Used `Object.create(null)` to avoid potential `Object.prototype`

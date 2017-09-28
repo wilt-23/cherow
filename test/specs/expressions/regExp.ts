@@ -18,6 +18,17 @@ describe('Literals - RegExp', () => {
         }).to.not.throw();
     });
 
+    it('should fail on early error duplicate flag', () => {
+        expect(() => {
+            parseScript(`/./gig;`)
+        }).to.throw('Duplicate flags supplied to RegExp constructor g');
+    });
+
+    it('should fail on duplicate "dotAll" flags', () => {
+        expect(() => {
+            parseScript(`/./sis`, { next: true})
+        }).to.throw('Duplicate flags supplied to RegExp constructor s');
+    });
     it('should throw if \\ or / is incorrect', () => {
         expect(() => {
             parseScript(`/a//.source;`)
@@ -587,10 +598,5 @@ describe('Literals - RegExp', () => {
             "sourceType": "script"
           });
     });
-    
-    it('should fail on early error duplicate flag', () => {
-        expect(() => {
-            parseScript(`/./gig;`)
-        }).to.throw('Duplicate flags supplied to RegExp constructor g');
-    });
+
 });

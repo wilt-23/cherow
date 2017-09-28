@@ -68,9 +68,8 @@ function getQualifiedJSXName(object) {
             return (getQualifiedJSXName(object.object) + '.' +
                 getQualifiedJSXName(object.property));
         default:
-            break;
+            throw new TypeError('Unexpected JSX object');
     }
-    throw new TypeError('Unexpected JSX object');
 }
 function isStartOfExpression(t, inJSXContext) {
     switch (t) {
@@ -141,9 +140,6 @@ function isValidSimpleAssignmentTarget(expr) {
 }
 function isKeyword(context, t) {
     switch (t) {
-        case 2162797 /* AwaitKeyword */:
-            // if (context & Context.Strict) return false;
-            return false;
         case 65643 /* AsKeyword */:
         case 65644 /* AsyncKeyword */:
         case 12362 /* BreakKeyword */:
@@ -196,8 +192,6 @@ function isKeyword(context, t) {
         case 12385 /* WhileKeyword */:
         case 12386 /* WithKeyword */:
             return true;
-        case 20586 /* YieldKeyword */:
-            return !!(context & 2 /* Strict */);
         default:
             return false;
     }
@@ -388,12 +382,7 @@ var KeywordDescTable = [
  * The conversion function between token and its string description/representation.
  */
 function tokenDesc(token) {
-    if ((token & 255 /* Type */) < KeywordDescTable.length) {
-        return KeywordDescTable[token & 255 /* Type */];
-    }
-    else {
-        throw new Error('unreachable');
-    }
+    return KeywordDescTable[token & 255 /* Type */];
 }
 // Used `Object.create(null)` to avoid potential `Object.prototype`
 // interference.
@@ -933,8 +922,6 @@ Parser.prototype.scanToken = function scanToken (context) {
             case 38 /* Ampersand */:
                 {
                     this$1.advance();
-                    if (!this$1.hasNext())
-                        { return 1049924 /* BitwiseAnd */; }
                     var next$2 = this$1.nextChar();
                     if (next$2 === 38 /* Ampersand */) {
                         this$1.advance();
@@ -1040,21 +1027,19 @@ Parser.prototype.scanToken = function scanToken (context) {
                     if (next$6 !== 62 /* GreaterThan */)
                         { return 1050432 /* GreaterThan */; }
                     this$1.advance();
-                    if (this$1.hasNext()) {
-                        next$6 = this$1.nextChar();
-                        if (next$6 === 62 /* GreaterThan */) {
-                            this$1.advance();
-                            if (this$1.consume(61 /* EqualSign */)) {
-                                return 524320 /* LogicalShiftRightAssign */;
-                            }
-                            else {
-                                return 1050691 /* LogicalShiftRight */;
-                            }
+                    next$6 = this$1.nextChar();
+                    if (next$6 === 62 /* GreaterThan */) {
+                        this$1.advance();
+                        if (this$1.consume(61 /* EqualSign */)) {
+                            return 524320 /* LogicalShiftRightAssign */;
                         }
-                        else if (next$6 === 61 /* EqualSign */) {
-                            this$1.advance();
-                            return 524319 /* ShiftRightAssign */;
+                        else {
+                            return 1050691 /* LogicalShiftRight */;
                         }
+                    }
+                    else if (next$6 === 61 /* EqualSign */) {
+                        this$1.advance();
+                        return 524319 /* ShiftRightAssign */;
                     }
                     return 1050690 /* ShiftRight */;
                 }
@@ -1062,8 +1047,6 @@ Parser.prototype.scanToken = function scanToken (context) {
             case 124 /* VerticalBar */:
                 {
                     this$1.advance();
-                    if (!this$1.hasNext())
-                        { return 1049413 /* BitwiseOr */; }
                     var next$7 = this$1.nextChar();
                     if (next$7 === 124 /* VerticalBar */) {
                         this$1.advance();
@@ -1081,7 +1064,12 @@ Parser.prototype.scanToken = function scanToken (context) {
                     var index$1 = this$1.index + 1;
                     if (index$1 < this$1.source.length) {
                         var next$8 = this$1.source.charCodeAt(index$1);
-                        if (next$8 === 46 /* Period */) {
+                        if (next$8 >= 48 /* Zero */ && next$8 <= 57 /* Nine */) {
+                            // Rewind the initial token.
+                            this$1.scanNumber(context, first);
+                            return 2 /* NumericLiteral */;
+                        }
+                        else if (next$8 === 46 /* Period */) {
                             index$1++;
                             if (index$1 < this$1.source.length &&
                                 this$1.source.charCodeAt(index$1) === 46 /* Period */) {
@@ -1089,11 +1077,6 @@ Parser.prototype.scanToken = function scanToken (context) {
                                 this$1.column += 3;
                                 return 14 /* Ellipsis */;
                             }
-                        }
-                        else if (next$8 >= 48 /* Zero */ && next$8 <= 57 /* Nine */) {
-                            // Rewind the initial token.
-                            this$1.scanNumber(context, first);
-                            return 2 /* NumericLiteral */;
                         }
                     }
                     this$1.advance();

@@ -78,10 +78,8 @@ export function getQualifiedJSXName(object: any): string {
                 getQualifiedJSXName(object.property)
             );
         default:
-            break;
+            throw new TypeError('Unexpected JSX object');
     }
-
-    throw new TypeError('Unexpected JSX object');
 }
 
 export function isStartOfExpression(t: Token, inJSXContext: boolean): boolean {
@@ -156,9 +154,6 @@ export function isValidSimpleAssignmentTarget(expr: Expression | Pattern): boole
 
 export function isKeyword(context: Context, t: Token): boolean {
     switch (t) {
-        case Token.AwaitKeyword:
-            // if (context & Context.Strict) return false;
-            return false;
         case Token.AsKeyword:
         case Token.AsyncKeyword:
         case Token.BreakKeyword:
@@ -211,8 +206,6 @@ export function isKeyword(context: Context, t: Token): boolean {
         case Token.WhileKeyword:
         case Token.WithKeyword:
             return true;
-        case Token.YieldKeyword:
-            return !!(context & Context.Strict);
         default:
             return false;
     }

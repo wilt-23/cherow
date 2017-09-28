@@ -821,23 +821,58 @@ describe('TC39 - String literals', () => {
     it('should parse "abc"', () => {
         expect(parseScript("'abc'", {
             ranges: true,
+            locations: true,
+            raw: true
         })).to.eql({
             "type": "Program",
-            "body": [{
-                "type": "ExpressionStatement",
-                "start": 0,
-                "expression": {
-                    "end": 5,
-                    "type": "Literal",
-                    "value": "abc",
-                    "start": 0,
-                },
-                "end": 5,
-            }],
-            "sourceType": "script",
             "start": 0,
             "end": 5,
-        });
+            "loc": {
+              "start": {
+                "line": 1,
+                "column": 0
+              },
+              "end": {
+                "line": 1,
+                "column": 5
+              }
+            },
+            "body": [
+              {
+                "type": "ExpressionStatement",
+                "start": 0,
+                "end": 5,
+                "loc": {
+                  "start": {
+                    "line": 1,
+                    "column": 0
+                  },
+                  "end": {
+                    "line": 1,
+                    "column": 5
+                  }
+                },
+                "expression": {
+                  "type": "Literal",
+                  "start": 0,
+                  "end": 5,
+                  "loc": {
+                    "start": {
+                      "line": 1,
+                      "column": 0
+                    },
+                    "end": {
+                      "line": 1,
+                      "column": 5
+                    }
+                  },
+                  "value": "abc",
+                  "raw": "'abc'"
+                }
+              }
+            ],
+            "sourceType": "script"
+          });
     });
 
     it('should parse "123"', () => {
@@ -881,39 +916,61 @@ describe('TC39 - String literals', () => {
         })
     });
 
-    it('should parse mongolian vowel separator', () => {
-        expect(parseScript(`"\\u180E"`, {
-            
-        })).to.eql({
-            "type": "Program",
-            "body": [{
-                "type": "ExpressionStatement",
-                "expression": {
-                    "type": "Literal",
-                    "value": "᠎",
-
-                },
-
-            }],
-            "sourceType": "script",
-
-        })
-    });
-
     it('should parse "\u0006A"', () => {
         expect(parseScript(`"\\u0006A"`, {
-            
+            locations: true,
+            raw: true,
+            ranges: true
         })).to.eql({
             "type": "Program",
-            "body": [{
+            "start": 0,
+            "end": 9,
+            "loc": {
+              "start": {
+                "line": 1,
+                "column": 0
+              },
+              "end": {
+                "line": 1,
+                "column": 9
+              }
+            },
+            "body": [
+              {
                 "type": "ExpressionStatement",
-                "expression": {
-                    "type": "Literal",
-                    "value": "\u0006A",
+                "start": 0,
+                "end": 9,
+                "loc": {
+                  "start": {
+                    "line": 1,
+                    "column": 0
+                  },
+                  "end": {
+                    "line": 1,
+                    "column": 9
+                  }
                 },
-            }],
-            "sourceType": "script",
-        })
+                "expression": {
+                  "type": "Literal",
+                  "start": 0,
+                  "end": 9,
+                  "loc": {
+                    "start": {
+                      "line": 1,
+                      "column": 0
+                    },
+                    "end": {
+                      "line": 1,
+                      "column": 9
+                    }
+                  },
+                  "value": "\u0006A",
+                  "raw": "\"\\u0006A\""
+                }
+              }
+            ],
+            "sourceType": "script"
+          })
     });
 
     it('should parse "\x00"', () => {
@@ -3004,26 +3061,58 @@ describe('TC39 - String literals', () => {
     it('should parse "\\u{294be}"', () => {
         expect(parseScript(`"\\u{294c4}"`, {
             ranges: true,
-            raw: true
+            raw: true,
+            locations: true
         })).to.eql({
             "type": "Program",
-            "body": [{
-                "end": 11,
-                "start": 0,
-                "type": "ExpressionStatement",
-                "expression": {
-                    "end": 11,
-                    "start": 0,
-                    "type": "Literal",
-                    "value": "𩓄",
-                    "raw": "\"\\u{294c4}\"",
-
-                },
-            }],
-            "end": 11,
             "start": 0,
-            "sourceType": "script",
-        })
+            "end": 11,
+            "loc": {
+              "start": {
+                "line": 1,
+                "column": 0
+              },
+              "end": {
+                "line": 1,
+                "column": 11
+              }
+            },
+            "body": [
+              {
+                "type": "ExpressionStatement",
+                "start": 0,
+                "end": 11,
+                "loc": {
+                  "start": {
+                    "line": 1,
+                    "column": 0
+                  },
+                  "end": {
+                    "line": 1,
+                    "column": 11
+                  }
+                },
+                "expression": {
+                  "type": "Literal",
+                  "start": 0,
+                  "end": 11,
+                  "loc": {
+                    "start": {
+                      "line": 1,
+                      "column": 0
+                    },
+                    "end": {
+                      "line": 1,
+                      "column": 11
+                    }
+                  },
+                  "value": "𩓄",
+                  "raw": "\"\\u{294c4}\""
+                }
+              }
+            ],
+            "sourceType": "script"
+          })
     });
 
     it('should parse "\\u{294be}"', () => {
@@ -3630,26 +3719,58 @@ describe('TC39 - String literals', () => {
     it('should parse "\\u{10caea}"', () => {
         expect(parseScript(`"\\u{10caea}"`, {
             ranges: true,
+            locations: true,
             raw: true
         })).to.eql({
             "type": "Program",
-            "body": [{
-                "end": 12,
-                "start": 0,
-                "type": "ExpressionStatement",
-                "expression": {
-                    "end": 12,
-                    "start": 0,
-                    "type": "Literal",
-                    "value": "􌫪",
-                    "raw": "\"\\u{10caea}\"",
-
-                },
-            }],
-            "end": 12,
             "start": 0,
-            "sourceType": "script",
-        })
+            "end": 12,
+            "loc": {
+              "start": {
+                "line": 1,
+                "column": 0
+              },
+              "end": {
+                "line": 1,
+                "column": 12
+              }
+            },
+            "body": [
+              {
+                "type": "ExpressionStatement",
+                "start": 0,
+                "end": 12,
+                "loc": {
+                  "start": {
+                    "line": 1,
+                    "column": 0
+                  },
+                  "end": {
+                    "line": 1,
+                    "column": 12
+                  }
+                },
+                "expression": {
+                  "type": "Literal",
+                  "start": 0,
+                  "end": 12,
+                  "loc": {
+                    "start": {
+                      "line": 1,
+                      "column": 0
+                    },
+                    "end": {
+                      "line": 1,
+                      "column": 12
+                    }
+                  },
+                  "value": "􌫪",
+                  "raw": "\"\\u{10caea}\""
+                }
+              }
+            ],
+            "sourceType": "script"
+          })
     });
 
     it('should parse "\\u{7c1e1}"', () => {
@@ -4031,51 +4152,115 @@ describe('TC39 - String literals', () => {
     it('should parse "\\u0154"', () => {
         expect(parseScript(`"\\u0154"`, {
             ranges: true,
-            raw: true
+            raw: true,
+            locations: true
         })).to.eql({
             "type": "Program",
-            "body": [{
-                "end": 8,
-                "start": 0,
-                "type": "ExpressionStatement",
-                "expression": {
-                    "end": 8,
-                    "start": 0,
-                    "type": "Literal",
-                    "value": "Ŕ",
-                    "raw": "\"\\u0154\"",
-
-                },
-            }],
-            "end": 8,
             "start": 0,
-            "sourceType": "script",
-        })
+            "end": 8,
+            "loc": {
+              "start": {
+                "line": 1,
+                "column": 0
+              },
+              "end": {
+                "line": 1,
+                "column": 8
+              }
+            },
+            "body": [
+              {
+                "type": "ExpressionStatement",
+                "start": 0,
+                "end": 8,
+                "loc": {
+                  "start": {
+                    "line": 1,
+                    "column": 0
+                  },
+                  "end": {
+                    "line": 1,
+                    "column": 8
+                  }
+                },
+                "expression": {
+                  "type": "Literal",
+                  "start": 0,
+                  "end": 8,
+                  "loc": {
+                    "start": {
+                      "line": 1,
+                      "column": 0
+                    },
+                    "end": {
+                      "line": 1,
+                      "column": 8
+                    }
+                  },
+                  "value": "Ŕ",
+                  "raw": "\"\\u0154\""
+                }
+              }
+            ],
+            "sourceType": "script"
+          })
     });
 
     it('should parse "\\u0154"', () => {
         expect(parseScript(`"\\u0154"`, {
             ranges: true,
-            raw: true
+            raw: true,
+            locations: true
         })).to.eql({
             "type": "Program",
-            "body": [{
-                "end": 8,
-                "start": 0,
-                "type": "ExpressionStatement",
-                "expression": {
-                    "end": 8,
-                    "start": 0,
-                    "type": "Literal",
-                    "value": "Ŕ",
-                    "raw": "\"\\u0154\"",
-
-                },
-            }],
-            "end": 8,
             "start": 0,
-            "sourceType": "script",
-        })
+            "end": 8,
+            "loc": {
+              "start": {
+                "line": 1,
+                "column": 0
+              },
+              "end": {
+                "line": 1,
+                "column": 8
+              }
+            },
+            "body": [
+              {
+                "type": "ExpressionStatement",
+                "start": 0,
+                "end": 8,
+                "loc": {
+                  "start": {
+                    "line": 1,
+                    "column": 0
+                  },
+                  "end": {
+                    "line": 1,
+                    "column": 8
+                  }
+                },
+                "expression": {
+                  "type": "Literal",
+                  "start": 0,
+                  "end": 8,
+                  "loc": {
+                    "start": {
+                      "line": 1,
+                      "column": 0
+                    },
+                    "end": {
+                      "line": 1,
+                      "column": 8
+                    }
+                  },
+                  "value": "Ŕ",
+                  "raw": "\"\\u0154\""
+                }
+              }
+            ],
+            "sourceType": "script"
+          })
     });
 
     it('should parse Russian capitals - "Д"', () => {
@@ -4205,76 +4390,189 @@ describe('TC39 - String literals', () => {
     it('should parse Russian small - "ю"', () => {
         expect(parseScript(`"ю"`, {
             ranges: true,
+            locations: true,
             raw: true
         })).to.eql({
             "type": "Program",
-            "body": [{
-                "end": 3,
-                "start": 0,
-                "type": "ExpressionStatement",
-                "expression": {
-                    "end": 3,
-                    "start": 0,
-                    "type": "Literal",
-                    "value": "ю",
-                    "raw": "\"ю\"",
-
-                },
-            }],
-            "end": 3,
             "start": 0,
-            "sourceType": "script",
-        })
+            "end": 3,
+            "loc": {
+              "start": {
+                "line": 1,
+                "column": 0
+              },
+              "end": {
+                "line": 1,
+                "column": 3
+              }
+            },
+            "body": [
+              {
+                "type": "ExpressionStatement",
+                "start": 0,
+                "end": 3,
+                "loc": {
+                  "start": {
+                    "line": 1,
+                    "column": 0
+                  },
+                  "end": {
+                    "line": 1,
+                    "column": 3
+                  }
+                },
+                "expression": {
+                  "type": "Literal",
+                  "start": 0,
+                  "end": 3,
+                  "loc": {
+                    "start": {
+                      "line": 1,
+                      "column": 0
+                    },
+                    "end": {
+                      "line": 1,
+                      "column": 3
+                    }
+                  },
+                  "value": "ю",
+                  "raw": "\"ю\""
+                }
+              }
+            ],
+            "sourceType": "script"
+          })
     });
 
     it('should parse digits - "1"', () => {
         expect(parseScript(`"1"`, {
             ranges: true,
+            locations: true,
             raw: true
         })).to.eql({
             "type": "Program",
-            "body": [{
-                "end": 3,
-                "start": 0,
-                "type": "ExpressionStatement",
-                "expression": {
-                    "end": 3,
-                    "start": 0,
-                    "type": "Literal",
-                    "value": "1",
-                    "raw": "\"1\"",
-
-                },
-            }],
-            "end": 3,
             "start": 0,
-            "sourceType": "script",
-        })
+            "end": 3,
+            "loc": {
+              "start": {
+                "line": 1,
+                "column": 0
+              },
+              "end": {
+                "line": 1,
+                "column": 3
+              }
+            },
+            "body": [
+              {
+                "type": "ExpressionStatement",
+                "start": 0,
+                "end": 3,
+                "loc": {
+                  "start": {
+                    "line": 1,
+                    "column": 0
+                  },
+                  "end": {
+                    "line": 1,
+                    "column": 3
+                  }
+                },
+                "expression": {
+                  "type": "Literal",
+                  "start": 0,
+                  "end": 3,
+                  "loc": {
+                    "start": {
+                      "line": 1,
+                      "column": 0
+                    },
+                    "end": {
+                      "line": 1,
+                      "column": 3
+                    }
+                  },
+                  "value": "1",
+                  "raw": "\"1\""
+                }
+              }
+            ],
+            "sourceType": "script"
+          })
+    });
+
+      it('should parse digits - "8"', () => {
+        expect(parseScript(`"\\n\\r\\t\\f\\v"`, {
+        })).to.eql({
+            "type": "Program",
+            "body": [
+                {
+                    "type": "ExpressionStatement",
+                    "expression": {
+                        "type": "Literal",
+                        "value": "\n\r\t\f\u000b"
+                    }
+                }
+            ],
+            "sourceType": "script"
+        });
     });
 
     it('should parse digits - "8"', () => {
         expect(parseScript(`"8"`, {
             ranges: true,
-            raw: true
+            raw: true,
+            locations: true
         })).to.eql({
             "type": "Program",
-            "body": [{
-                "end": 3,
-                "start": 0,
-                "type": "ExpressionStatement",
-                "expression": {
-                    "end": 3,
-                    "start": 0,
-                    "type": "Literal",
-                    "value": "8",
-                    "raw": "\"8\"",
-
-                },
-            }],
-            "end": 3,
             "start": 0,
-            "sourceType": "script",
-        })
+            "end": 3,
+            "loc": {
+              "start": {
+                "line": 1,
+                "column": 0
+              },
+              "end": {
+                "line": 1,
+                "column": 3
+              }
+            },
+            "body": [
+              {
+                "type": "ExpressionStatement",
+                "start": 0,
+                "end": 3,
+                "loc": {
+                  "start": {
+                    "line": 1,
+                    "column": 0
+                  },
+                  "end": {
+                    "line": 1,
+                    "column": 3
+                  }
+                },
+                "expression": {
+                  "type": "Literal",
+                  "start": 0,
+                  "end": 3,
+                  "loc": {
+                    "start": {
+                      "line": 1,
+                      "column": 0
+                    },
+                    "end": {
+                      "line": 1,
+                      "column": 3
+                    }
+                  },
+                  "value": "8",
+                  "raw": "\"8\""
+                }
+              }
+            ],
+            "sourceType": "script"
+          })
     });
 
 });

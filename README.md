@@ -20,7 +20,7 @@ A online demo can be found [here](https://cherow.github.io/cherow/).
 - Support for JSX, a syntax extension for React
 - Skips shebang comment nodes by default
 - Optional tracking of syntax node location (index-based and line-column)
-- 5100 unit tests with full code coverage
+- 5200 unit tests 
 
 ## ESNext features
 
