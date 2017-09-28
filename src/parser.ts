@@ -1157,7 +1157,9 @@ export class Parser {
 
         this.tokenValue = parseFloat(this.source.substring(start, end));
 
-        return state & NumberState.BigInt ? Token.BigIntLiteral : Token.NumericLiteral;
+        if (state & NumberState.BigInt) return Token.BigIntLiteral;
+
+        return Token.NumericLiteral;
     }
 
     private scanRegularExpression(): Token {
@@ -1565,7 +1567,7 @@ export class Parser {
         return this.scanTemplate(context);
     }
 
-    private scanTemplate(context: Context): any {
+    private scanTemplate(context: Context): Token {
         const start = this.index;
         let tail = true;
         let ret: string | void = '';
@@ -1593,6 +1595,18 @@ export class Parser {
                             ret += '$';
                             break;
                         }
+
+                    case Chars.Backslash:
+                        this.advance();
+                        if (!this.hasNext()) this.error(Errors.UnterminatedTemplate);
+
+                        if (ch >= 128) {
+                            ret += fromCodePoint(ch);
+                        } else {
+                            ret += this.scanStringEscape(context);
+                        }
+
+                        break;
 
                     case Chars.CarriageReturn:
                         if (this.hasNext() && this.nextChar() === Chars.LineFeed) {

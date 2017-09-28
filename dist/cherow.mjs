@@ -1511,7 +1511,9 @@ Parser.prototype.scanNumber = function scanNumber (context, ch) {
     if (this.flags & 2097152 /* OptionsRaw */)
         { this.tokenRaw = this.source.substring(start, end); }
     this.tokenValue = parseFloat(this.source.substring(start, end));
-    return state & 2 /* BigInt */ ? 116 /* BigIntLiteral */ : 2 /* NumericLiteral */;
+    if (state & 2 /* BigInt */)
+        { return 116 /* BigIntLiteral */; }
+    return 2 /* NumericLiteral */;
 };
 Parser.prototype.scanRegularExpression = function scanRegularExpression () {
         var this$1 = this;
@@ -1905,6 +1907,17 @@ Parser.prototype.scanTemplate = function scanTemplate (context) {
                     ret += '$';
                     break;
                 }
+            case 92 /* Backslash */:
+                this$1.advance();
+                if (!this$1.hasNext())
+                    { this$1.error(106 /* UnterminatedTemplate */); }
+                if (ch >= 128) {
+                    ret += fromCodePoint(ch);
+                }
+                else {
+                    ret += this$1.scanStringEscape(context);
+                }
+                break;
             case 13 /* CarriageReturn */:
                 if (this$1.hasNext() && this$1.nextChar() === 10 /* LineFeed */) {
                     if (ret != null)

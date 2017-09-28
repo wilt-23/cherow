@@ -789,36 +789,94 @@ describe('Espressions - Template', () => {
             }
         });
     });
-    
-        it('should parse line terminator', () => {
-            expect(parseScript('`\\n\\r\\b\\v\\t\\f\\\n\\\r\n`', {
-                ranges: false,
-                raw: true
-            })).to.eql({
-                "type": "Program",
-                "body": [
-                    {
-                        "type": "ExpressionStatement",
-                        "expression": {
-                            "type": "TemplateLiteral",
-                            "quasis": [
-                                {
-                                    "type": "TemplateElement",
-                                    "value": {
-                                        "raw": "\\n\\r\\b\\v\\t\\f\\\n\\\r\n",
-                                        "cooked": "\\n\\r\\b\\v\\t\\f\\\n\\\r\n"
-                                    },
-                                    "tail": true
-                                }
-                            ],
-                            "expressions": []
-                        }
+    it('should parse line terminator', () => {
+        expect(parseScript('`\r\n\t\n`', {
+            ranges: false,
+            raw: true
+        })).to.eql({
+            "type": "Program",
+            "body": [
+                {
+                    "type": "ExpressionStatement",
+                    "expression": {
+                        "type": "TemplateLiteral",
+                        "quasis": [
+                            {
+                                "type": "TemplateElement",
+                                "value": {
+                                    "raw": "\r\n\t\n",
+                                    "cooked": "\r\n\t\n"
+                                },
+                                "tail": true
+                            }
+                        ],
+                        "expressions": []
                     }
-                ],
-                "sourceType": "script"
-            });
+                }
+            ],
+            "sourceType": "script"
         });
-        
+    });
+
+    it('should parse line terminator', () => {
+        expect(parseScript('`\r\n\t\n`', {
+            ranges: false,
+            raw: true
+        })).to.eql({
+            "type": "Program",
+            "body": [
+                {
+                    "type": "ExpressionStatement",
+                    "expression": {
+                        "type": "TemplateLiteral",
+                        "quasis": [
+                            {
+                                "type": "TemplateElement",
+                                "value": {
+                                    "raw": "\r\n\t\n",
+                                    "cooked": "\r\n\t\n"
+                                },
+                                "tail": true
+                            }
+                        ],
+                        "expressions": []
+                    }
+                }
+            ],
+            "sourceType": "script"
+        });
+    });
+
+    it('should parse line terminator', () => {
+        expect(parseScript("var source = '`\\n\\r\\n`';", {
+            ranges: false,
+            raw: true
+        })).to.eql({
+            "type": "Program",
+            "body": [
+                {
+                    "type": "VariableDeclaration",
+                    "declarations": [
+                        {
+                            "type": "VariableDeclarator",
+                            "id": {
+                                "type": "Identifier",
+                                "name": "source"
+                            },
+                            "init": {
+                                "type": "Literal",
+                                "value": "`\n\r\n`",
+                                "raw": "'`\\n\\r\\n`'"
+                            }
+                        }
+                    ],
+                    "kind": "var"
+                }
+            ],
+            "sourceType": "script"
+        });
+    });
+
         it('should parse advanced', () => {
             expect(parseScript('doSmth(`${x} + ${y} = ${x + y}`)', {
                 ranges: false,
