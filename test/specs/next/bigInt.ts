@@ -34,54 +34,55 @@ describe('Next - BigInt', () => {
             ranges: true,
             locations: true
         })).to.eql({
-          "type": "Program",
-          "body": [
-              {
-                  "type": "ExpressionStatement",
-                  "expression": {
-                      "type": "BigIntLiteral",
-                      "value": 349,
-                      "start": 0,
-                      "end": 12,
-                      "loc": {
-                          "start": {
-                              "line": 1,
-                              "column": 0
-                          },
-                          "end": {
-                              "line": 1,
-                              "column": 12
-                          }
-                      }
-                  },
-                  "start": 0,
-                  "end": 12,
-                  "loc": {
-                      "start": {
-                          "line": 1,
-                          "column": 0
-                      },
-                      "end": {
-                          "line": 1,
-                          "column": 12
-                      }
-                  }
-              }
-          ],
-          "sourceType": "script",
-          "start": 0,
-          "end": 12,
-          "loc": {
-              "start": {
-                  "line": 1,
-                  "column": 0
-              },
-              "end": {
-                  "line": 1,
-                  "column": 12
-              }
-          }
-      });
+            "type": "Program",
+            "body": [
+                {
+                    "type": "ExpressionStatement",
+                    "expression": {
+                        "type": "BigIntLiteral",
+                        "value": 349,
+                        "start": 0,
+                        "end": 12,
+                        "loc": {
+                            "start": {
+                                "line": 1,
+                                "column": 0
+                            },
+                            "end": {
+                                "line": 1,
+                                "column": 12
+                            }
+                        },
+                        "raw": "0b101011101n"
+                    },
+                    "start": 0,
+                    "end": 12,
+                    "loc": {
+                        "start": {
+                            "line": 1,
+                            "column": 0
+                        },
+                        "end": {
+                            "line": 1,
+                            "column": 12
+                        }
+                    }
+                }
+            ],
+            "sourceType": "script",
+            "start": 0,
+            "end": 12,
+            "loc": {
+                "start": {
+                    "line": 1,
+                    "column": 0
+                },
+                "end": {
+                    "line": 1,
+                    "column": 12
+                }
+            }
+        });
     });
 
     it('should parse octal', () => {
@@ -91,54 +92,55 @@ describe('Next - BigInt', () => {
             ranges: true,
             locations: true
         })).to.eql({
-          "type": "Program",
-          "body": [
-              {
-                  "type": "ExpressionStatement",
-                  "expression": {
-                      "type": "BigIntLiteral",
-                      "value": 7450,
-                      "start": 0,
-                      "end": 8,
-                      "loc": {
-                          "start": {
-                              "line": 1,
-                              "column": 0
-                          },
-                          "end": {
-                              "line": 1,
-                              "column": 8
-                          }
-                      }
-                  },
-                  "start": 0,
-                  "end": 8,
-                  "loc": {
-                      "start": {
-                          "line": 1,
-                          "column": 0
-                      },
-                      "end": {
-                          "line": 1,
-                          "column": 8
-                      }
-                  }
-              }
-          ],
-          "sourceType": "script",
-          "start": 0,
-          "end": 8,
-          "loc": {
-              "start": {
-                  "line": 1,
-                  "column": 0
-              },
-              "end": {
-                  "line": 1,
-                  "column": 8
-              }
-          }
-      });
+            "type": "Program",
+            "body": [
+                {
+                    "type": "ExpressionStatement",
+                    "expression": {
+                        "type": "BigIntLiteral",
+                        "value": 7450,
+                        "start": 0,
+                        "end": 8,
+                        "loc": {
+                            "start": {
+                                "line": 1,
+                                "column": 0
+                            },
+                            "end": {
+                                "line": 1,
+                                "column": 8
+                            }
+                        },
+                        "raw": "0o16432n"
+                    },
+                    "start": 0,
+                    "end": 8,
+                    "loc": {
+                        "start": {
+                            "line": 1,
+                            "column": 0
+                        },
+                        "end": {
+                            "line": 1,
+                            "column": 8
+                        }
+                    }
+                }
+            ],
+            "sourceType": "script",
+            "start": 0,
+            "end": 8,
+            "loc": {
+                "start": {
+                    "line": 1,
+                    "column": 0
+                },
+                "end": {
+                    "line": 1,
+                    "column": 8
+                }
+            }
+        });
     });
 
     it('should parse hex', () => {
@@ -148,54 +150,55 @@ describe('Next - BigInt', () => {
             ranges: true,
             locations: true
         })).to.eql({
-          "type": "Program",
-          "body": [
-              {
-                  "type": "ExpressionStatement",
-                  "expression": {
-                      "type": "BigIntLiteral",
-                      "value": 16773411,
-                      "start": 0,
-                      "end": 9,
-                      "loc": {
-                          "start": {
-                              "line": 1,
-                              "column": 0
-                          },
-                          "end": {
-                              "line": 1,
-                              "column": 9
-                          }
-                      }
-                  },
-                  "start": 0,
-                  "end": 9,
-                  "loc": {
-                      "start": {
-                          "line": 1,
-                          "column": 0
-                      },
-                      "end": {
-                          "line": 1,
-                          "column": 9
-                      }
-                  }
-              }
-          ],
-          "sourceType": "script",
-          "start": 0,
-          "end": 9,
-          "loc": {
-              "start": {
-                  "line": 1,
-                  "column": 0
-              },
-              "end": {
-                  "line": 1,
-                  "column": 9
-              }
-          }
-      });
+            "type": "Program",
+            "body": [
+                {
+                    "type": "ExpressionStatement",
+                    "expression": {
+                        "type": "BigIntLiteral",
+                        "value": 16773411,
+                        "start": 0,
+                        "end": 9,
+                        "loc": {
+                            "start": {
+                                "line": 1,
+                                "column": 0
+                            },
+                            "end": {
+                                "line": 1,
+                                "column": 9
+                            }
+                        },
+                        "raw": "0xFFF123n"
+                    },
+                    "start": 0,
+                    "end": 9,
+                    "loc": {
+                        "start": {
+                            "line": 1,
+                            "column": 0
+                        },
+                        "end": {
+                            "line": 1,
+                            "column": 9
+                        }
+                    }
+                }
+            ],
+            "sourceType": "script",
+            "start": 0,
+            "end": 9,
+            "loc": {
+                "start": {
+                    "line": 1,
+                    "column": 0
+                },
+                "end": {
+                    "line": 1,
+                    "column": 9
+                }
+            }
+        });
     });
 
     it('should parse small number', () => {
@@ -205,54 +208,55 @@ describe('Next - BigInt', () => {
             ranges: true,
             locations: true
         })).to.eql({
-          "type": "Program",
-          "body": [
-              {
-                  "type": "ExpressionStatement",
-                  "expression": {
-                      "type": "BigIntLiteral",
-                      "value": 100,
-                      "start": 0,
-                      "end": 5,
-                      "loc": {
-                          "start": {
-                              "line": 1,
-                              "column": 0
-                          },
-                          "end": {
-                              "line": 1,
-                              "column": 5
-                          }
-                      }
-                  },
-                  "start": 0,
-                  "end": 5,
-                  "loc": {
-                      "start": {
-                          "line": 1,
-                          "column": 0
-                      },
-                      "end": {
-                          "line": 1,
-                          "column": 5
-                      }
-                  }
-              }
-          ],
-          "sourceType": "script",
-          "start": 0,
-          "end": 4,
-          "loc": {
-              "start": {
-                  "line": 1,
-                  "column": 0
-              },
-              "end": {
-                  "line": 1,
-                  "column": 5
-              }
-          }
-      });
+            "type": "Program",
+            "body": [
+                {
+                    "type": "ExpressionStatement",
+                    "expression": {
+                        "type": "BigIntLiteral",
+                        "value": 100,
+                        "start": 0,
+                        "end": 5,
+                        "loc": {
+                            "start": {
+                                "line": 1,
+                                "column": 0
+                            },
+                            "end": {
+                                "line": 1,
+                                "column": 5
+                            }
+                        },
+                        "raw": "100"
+                    },
+                    "start": 0,
+                    "end": 5,
+                    "loc": {
+                        "start": {
+                            "line": 1,
+                            "column": 0
+                        },
+                        "end": {
+                            "line": 1,
+                            "column": 5
+                        }
+                    }
+                }
+            ],
+            "sourceType": "script",
+            "start": 0,
+            "end": 4,
+            "loc": {
+                "start": {
+                    "line": 1,
+                    "column": 0
+                },
+                "end": {
+                    "line": 1,
+                    "column": 5
+                }
+            }
+        });
     });
 
     it('should parse large number', () => {
@@ -262,53 +266,54 @@ describe('Next - BigInt', () => {
             ranges: true,
             locations: true
         })).to.eql({
-          "type": "Program",
-          "body": [
-              {
-                  "type": "ExpressionStatement",
-                  "expression": {
-                      "type": "BigIntLiteral",
-                      "value": 9223372036854776000,
-                      "start": 0,
-                      "end": 21,
-                      "loc": {
-                          "start": {
-                              "line": 1,
-                              "column": 0
-                          },
-                          "end": {
-                              "line": 1,
-                              "column": 21
-                          }
-                      }
-                  },
-                  "start": 0,
-                  "end": 21,
-                  "loc": {
-                      "start": {
-                          "line": 1,
-                          "column": 0
-                      },
-                      "end": {
-                          "line": 1,
-                          "column": 21
-                      }
-                  }
-              }
-          ],
-          "sourceType": "script",
-          "start": 0,
-          "end": 20,
-          "loc": {
-              "start": {
-                  "line": 1,
-                  "column": 0
-              },
-              "end": {
-                  "line": 1,
-                  "column": 21
-              }
-          }
-      });
+            "type": "Program",
+            "body": [
+                {
+                    "type": "ExpressionStatement",
+                    "expression": {
+                        "type": "BigIntLiteral",
+                        "value": 9223372036854776000,
+                        "start": 0,
+                        "end": 21,
+                        "loc": {
+                            "start": {
+                                "line": 1,
+                                "column": 0
+                            },
+                            "end": {
+                                "line": 1,
+                                "column": 21
+                            }
+                        },
+                        "raw": "9223372036854775807"
+                    },
+                    "start": 0,
+                    "end": 21,
+                    "loc": {
+                        "start": {
+                            "line": 1,
+                            "column": 0
+                        },
+                        "end": {
+                            "line": 1,
+                            "column": 21
+                        }
+                    }
+                }
+            ],
+            "sourceType": "script",
+            "start": 0,
+            "end": 20,
+            "loc": {
+                "start": {
+                    "line": 1,
+                    "column": 0
+                },
+                "end": {
+                    "line": 1,
+                    "column": 21
+                }
+            }
+        });
     });
 });
