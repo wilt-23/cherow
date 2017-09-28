@@ -3065,7 +3065,6 @@ describe('Espressions - Async', () => {
         expect(parseScript('class X { async() {} }', {
             ranges: true,
             raw: true,
-            tokens: true
         })).to.eql({
             "type": "Program",
             "start": 0,
@@ -3129,7 +3128,6 @@ describe('Espressions - Async', () => {
         expect(parseScript('(async function() { await foo; })', {
             ranges: true,
             raw: true,
-            tokens: true
         })).to.eql({
             "type": "Program",
             "start": 0,

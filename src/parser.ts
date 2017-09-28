@@ -7,6 +7,7 @@ import { Token, tokenDesc, descKeyword } from './token';
 import { isValidIdentifierStart, isIdentifierStart, isIdentifierPart } from './unicode';
 import { Options, SavedState, CollectComments, ErrorLocation, Location } from './interface';
 
+
 export class Parser {
     private readonly source: string;
     private index: number;
@@ -21,7 +22,6 @@ export class Parser {
     private endPos: number;
     private endColumn: number;
     private endLine: number;
-    private tokens: any;
     private tokenRaw: string;
     private labelSet: any;
     private blockScope: any;
@@ -55,7 +55,6 @@ export class Parser {
         this.functionScope = undefined;
         this.blockScope = undefined;
         this.parentScope = undefined;
-        this.tokens = undefined;
         this.comments = undefined;
 
         if (options.next) this.flags |= Flags.OptionsNext;
@@ -64,10 +63,8 @@ export class Parser {
         if (options.locations) this.flags |= Flags.OptionsLoc;
         if (options.ranges) this.flags |= Flags.OptionsRanges;
         if (options.raw) this.flags |= Flags.OptionsRaw;
-        if (options.tokens) this.flags |= Flags.OptionsOnToken;
         if (options.v8) this.flags |= Flags.OptionsV8;
 
-        if (this.flags & Flags.OptionsOnToken) this.tokens = options.tokens;
         if (this.flags & Flags.OptionsOnComment) this.comments = options.comments;
     }
 
@@ -184,35 +181,7 @@ export class Parser {
 
     private nextToken(context: Context): Token {
         this.token = this.scanToken(context);
-        if (this.flags & Flags.OptionsOnToken && this.token !== Token.EndOfSource) {
-            this.collectTokens(this.token);
-        }
         return this.token;
-    }
-
-    private collectTokens(token: Token) {
-        const value = this.tokenValue;
-        const start = this.startPos;
-        const end = this.index;
-
-        if (typeof this.tokens === 'function') {
-            this.tokens(tokenDesc(token), value, start, end);
-        } else if (Array.isArray(this.comments)) {
-
-            const node: any = {
-                type: tokenDesc(token),
-                value,
-                start: this.startPos,
-                end: this.index
-            };
-
-            if (this.flags & Flags.OptionsRanges) {
-                node.start = start;
-                node.end = end;
-            }
-
-            this.comments.push(node);
-        }
     }
 
     private hasNext() {

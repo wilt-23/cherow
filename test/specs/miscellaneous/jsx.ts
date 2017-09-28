@@ -228,8 +228,203 @@ describe('JSX', () => {
               parseScript('<div:a></div:b>');
           }).to.throw();
       });
-  
-  
+
+      
+      it('should parse nested namespace', () => {
+        expect(parseScript(`<a:b><a:b></a:b></a:b>;`, {
+            jsx: true,
+            ranges: true,
+        })).to.eql({
+            "type": "Program",
+            "start": 0,
+            "end": 23,
+            "body": [
+              {
+                "type": "ExpressionStatement",
+                "start": 0,
+                "end": 23,
+                "expression": {
+                  "type": "JSXElement",
+                  "start": 0,
+                  "end": 22,
+                  "openingElement": {
+                    "type": "JSXOpeningElement",
+                    "start": 0,
+                    "end": 5,
+                    "attributes": [],
+                    "name": {
+                      "type": "JSXNamespacedName",
+                      "start": 1,
+                      "end": 4,
+                      "namespace": {
+                        "type": "JSXIdentifier",
+                        "start": 1,
+                        "end": 2,
+                        "name": "a"
+                      },
+                      "name": {
+                        "type": "JSXIdentifier",
+                        "start": 3,
+                        "end": 4,
+                        "name": "b"
+                      }
+                    },
+                    "selfClosing": false
+                  },
+                  "closingElement": {
+                    "type": "JSXClosingElement",
+                    "start": 16,
+                    "end": 22,
+                    "name": {
+                      "type": "JSXNamespacedName",
+                      "start": 18,
+                      "end": 21,
+                      "namespace": {
+                        "type": "JSXIdentifier",
+                        "start": 18,
+                        "end": 19,
+                        "name": "a"
+                      },
+                      "name": {
+                        "type": "JSXIdentifier",
+                        "start": 20,
+                        "end": 21,
+                        "name": "b"
+                      }
+                    }
+                  },
+                  "children": [
+                    {
+                      "type": "JSXElement",
+                      "start": 5,
+                      "end": 16,
+                      "openingElement": {
+                        "type": "JSXOpeningElement",
+                        "start": 5,
+                        "end": 10,
+                        "attributes": [],
+                        "name": {
+                          "type": "JSXNamespacedName",
+                          "start": 6,
+                          "end": 9,
+                          "namespace": {
+                            "type": "JSXIdentifier",
+                            "start": 6,
+                            "end": 7,
+                            "name": "a"
+                          },
+                          "name": {
+                            "type": "JSXIdentifier",
+                            "start": 8,
+                            "end": 9,
+                            "name": "b"
+                          }
+                        },
+                        "selfClosing": false
+                      },
+                      "closingElement": {
+                        "type": "JSXClosingElement",
+                        "start": 10,
+                        "end": 16,
+                        "name": {
+                          "type": "JSXNamespacedName",
+                          "start": 12,
+                          "end": 15,
+                          "namespace": {
+                            "type": "JSXIdentifier",
+                            "start": 12,
+                            "end": 13,
+                            "name": "a"
+                          },
+                          "name": {
+                            "type": "JSXIdentifier",
+                            "start": 14,
+                            "end": 15,
+                            "name": "b"
+                          }
+                        }
+                      },
+                      "children": []
+                    }
+                  ]
+                }
+              }
+            ],
+            "sourceType": "script"
+          });
+    });
+
+      it('should parse namespace', () => {
+        expect(parseScript(`<a:b></a:b>;`, {
+            jsx: true,
+            ranges: true,
+        })).to.eql({
+            "type": "Program",
+            "start": 0,
+            "end": 12,
+            "body": [
+              {
+                "type": "ExpressionStatement",
+                "start": 0,
+                "end": 12,
+                "expression": {
+                  "type": "JSXElement",
+                  "start": 0,
+                  "end": 11,
+                  "openingElement": {
+                    "type": "JSXOpeningElement",
+                    "start": 0,
+                    "end": 5,
+                    "attributes": [],
+                    "name": {
+                      "type": "JSXNamespacedName",
+                      "start": 1,
+                      "end": 4,
+                      "namespace": {
+                        "type": "JSXIdentifier",
+                        "start": 1,
+                        "end": 2,
+                        "name": "a"
+                      },
+                      "name": {
+                        "type": "JSXIdentifier",
+                        "start": 3,
+                        "end": 4,
+                        "name": "b"
+                      }
+                    },
+                    "selfClosing": false
+                  },
+                  "closingElement": {
+                    "type": "JSXClosingElement",
+                    "start": 5,
+                    "end": 11,
+                    "name": {
+                      "type": "JSXNamespacedName",
+                      "start": 7,
+                      "end": 10,
+                      "namespace": {
+                        "type": "JSXIdentifier",
+                        "start": 7,
+                        "end": 8,
+                        "name": "a"
+                      },
+                      "name": {
+                        "type": "JSXIdentifier",
+                        "start": 9,
+                        "end": 10,
+                        "name": "b"
+                      }
+                    }
+                  },
+                  "children": []
+                }
+              }
+            ],
+            "sourceType": "script"
+          });
+    });
+
       it('should parse yield tag', () => {
           expect(parseScript(`function*it(){
               yield <a></a>;

@@ -10,7 +10,6 @@ export interface Options {
     loc?: boolean;
     raw?: boolean;
     jsx?: boolean;
-    tokens?: boolean;
     source?: string;
     v8?: boolean;
 }

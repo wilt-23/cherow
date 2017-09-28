@@ -44,7 +44,6 @@ This need to be enabled with the `v8` option
 * `next` - Enables `ECMAScript Next` support and let you use proposals at `stage 3` or higher such as `Dynamic Import`
 * `raw` - Enables the raw property on literal nodes (*Esprima and Acorn feature*)
 * `comments` - Enables option to collect comments. Optional; Either array or function. Works like [Acorn](https://github.com/ternjs/acorn) onComment
-* `tokens` - If enabled each found token will be returned as either an function or an array (*work in progres*)
 * `ranges` - Enables the start and characters offsets on the AST node
 * `locations` - Enables location tracking
 * `jsx` - Enables JSX
