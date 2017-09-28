@@ -2933,15 +2933,10 @@ Parser.prototype.parseCatchClause = function parseCatchClause (context) {
     var param = null;
     if (!(this.flags & 4194304 /* OptionsNext */) || this.token === 11 /* LeftParen */) {
         this.expect(context, 11 /* LeftParen */);
-        switch (this.token) {
-            case 16 /* RightParen */:
-                this.error(1 /* UnexpectedToken */, tokenDesc(this.token));
-            case 131073 /* Identifier */:
-                this.addCatchArg(this.tokenValue, 1 /* Shadowable */);
-            default:
-                if (hasMask(this.token, 131072 /* BindingPattern */))
-                    { param = this.parseBindingPatternOrIdentifier(context); }
-        }
+        if (!hasMask(this.token, 131072 /* BindingPattern */))
+            { this.error(1 /* UnexpectedToken */, tokenDesc(this.token)); }
+        this.addCatchArg(this.tokenValue, 1 /* Shadowable */);
+        param = this.parseBindingPatternOrIdentifier(context);
         this.expect(context, 16 /* RightParen */);
     }
     var body = this.parseBlockStatement(context | 131072 /* IfClause */);
@@ -3318,13 +3313,9 @@ Parser.prototype.parseLeftHandSideExpression = function parseLeftHandSideExpress
         case 12380 /* SuperKeyword */:
             return this.parseCallExpression(context, pos, this.parseSuper(context));
         default:
-            // If we encounter an situation where two '() => {}' are parsed underneath each other in statement
-            // position, we have to return the 'expr' directly to avoid loads of issues with
-            // invalid call expression cases
             var expr = this.parseMemberExpression(context, pos);
             if (this.flags & 32768 /* Arrow */)
                 { return expr; }
-            // return call expression
             return this.parseCallExpression(context, pos, expr);
     }
 };

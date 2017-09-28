@@ -2791,17 +2791,10 @@ export class Parser {
         let param = null;
 
         if (!(this.flags & Flags.OptionsNext) || this.token === Token.LeftParen) {
-
             this.expect(context, Token.LeftParen);
-
-            switch (this.token) {
-                case Token.RightParen:
-                    this.error(Errors.UnexpectedToken, tokenDesc(this.token));
-                case Token.Identifier:
-                    this.addCatchArg(this.tokenValue, ScopeMasks.Shadowable);
-                default:
-                    if (hasMask(this.token, Token.BindingPattern)) param = this.parseBindingPatternOrIdentifier(context);
-            }
+            if (!hasMask(this.token, Token.BindingPattern)) this.error(Errors.UnexpectedToken, tokenDesc(this.token));
+            this.addCatchArg(this.tokenValue, ScopeMasks.Shadowable);
+            param = this.parseBindingPatternOrIdentifier(context);
             this.expect(context, Token.RightParen);
         }
 
@@ -3214,20 +3207,16 @@ export class Parser {
 
     private parseLeftHandSideExpression(context: Context, pos: Location): ESTree.Expression | ESTree.Import {
         switch (this.token) {
+
             case Token.ImportKeyword:
                 if (!(this.flags & Flags.OptionsNext)) this.error(Errors.UnexpectedToken, tokenDesc(this.token));
                 return this.parseCallExpression(context | Context.DynamicImport, pos, this.parseImportCall(context, pos));
+
             case Token.SuperKeyword:
                 return this.parseCallExpression(context, pos, this.parseSuper(context));
             default:
-                // If we encounter an situation where two '() => {}' are parsed underneath each other in statement
-                // position, we have to return the 'expr' directly to avoid loads of issues with
-                // invalid call expression cases
                 const expr = this.parseMemberExpression(context, pos);
-
                 if (this.flags & Flags.Arrow) return expr;
-
-                // return call expression
                 return this.parseCallExpression(context, pos, expr);
         }
     }
