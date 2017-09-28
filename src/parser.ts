@@ -3388,11 +3388,6 @@ export class Parser {
         // Invalid: '(...a)'
         if (this.flags & Flags.HasRest) this.throwError(Errors.UnexpectedRestElement);
 
-        // Invalid: 'async ({a = b})'
-        if (context & Context.Await && !(this.flags & Flags.OptionsNext) && !(this.flags & Flags.InFunctionBody)) {
-            this.throwError(Errors.InvalidShorthandPropertyAssignment);
-        }
-
         this.flags &= ~Flags.Arrow;
 
         if (expr.length > 1) {
@@ -3628,13 +3623,15 @@ export class Parser {
             }
         } else {
             computed = this.token === Token.LeftBracket;
-            if (context & Context.Strict && this.isEvalOrArguments(this.tokenValue)) this.error(Errors.UnexpectedReservedWord);
+
             key = this.parseObjectPropertyKey(context);
             this.expect(context, Token.Colon);
 
-            if (context & Context.Await && this.token === Token.AwaitKeyword) this.error(Errors.UnexpectedStrictReserved);
             value = this.parseBindingPatternOrIdentifier(context | Context.Binding);
-            if (this.parseOptional(context, Token.Assign)) value = this.parseAssignmentPattern(context, value, pos);
+
+            if (this.parseOptional(context, Token.Assign)) {
+                value = this.parseAssignmentPattern(context, value, pos);
+            }
         }
 
         return this.finishNode(pos, {
@@ -3710,10 +3707,6 @@ export class Parser {
                 }
                 params.type = 'RestElement';
                 this.reinterpretExpressionAsPattern(context, params.argument);
-                return;
-
-            case 'Property':
-                this.reinterpretExpressionAsPattern(context, params.value);
                 return;
 
             default:
@@ -3804,10 +3797,6 @@ export class Parser {
                     // skip holes in pattern
                     if (params.elements[i] !== null) this.parseArrowFormalParameter(context, params.elements[i]);
                 }
-                return;
-
-            case 'Property':
-                this.parseArrowFormalParameter(context, params.value);
                 return;
 
             case 'ObjectExpression':
@@ -4179,9 +4168,6 @@ export class Parser {
             // Invalid: '"use strict"; (function package() {})()'
             if (context & Context.Module && hasMask(this.token, Token.FutureReserved)) {
                 this.error(Errors.UnexpectedStrictReserved);
-                // Invalid: 'function static() { "use strict"; }'
-                this.errorLocation = this.trackErrorLocation();
-                this.flags |= Flags.HasReservedWord;
             }
 
             name = this.parseIdentifier(context);
@@ -4241,10 +4227,6 @@ export class Parser {
 
         this.expect(context, Token.RightParen);
         return result;
-    }
-
-    private isOnlyStrict(context: Context): boolean | 0 {
-        return context & Context.Strict && !(context & Context.Module);
     }
 
     private parseFormalParameter(
@@ -4745,9 +4727,6 @@ export class Parser {
                 break;
             case Token.AwaitKeyword:
             case Token.YieldKeyword:
-                key = this.parseIdentifier(context);
-                break;
-            case Token.Ellipsis:
                 key = this.parseIdentifier(context);
                 break;
             case Token.NumericLiteral:

@@ -229,6 +229,161 @@ describe('JSX', () => {
           }).to.throw();
       });
 
+      it('should fail if closing tag namespace does not match opening tag namespace', () => {
+        expect(() => {
+            parseScript('<div> prefix [...children] suffix </div>');
+        }).to.throw();
+    });
+
+    it('should fail on empty expression container', () => {
+        expect(() => {
+            parseScript('<div> prefix {} suffix </div>');
+        }).to.throw();
+    });
+
+    it('should parse jsx spread children', () => {
+        expect(parseScript(`<div> prefix {...children} suffix </div>`, {
+            jsx: true,
+            ranges: true,
+        })).to.eql({
+            "type": "Program",
+            "body": [
+                {
+                    "type": "ExpressionStatement",
+                    "expression": {
+                        "type": "JSXElement",
+                        "children": [
+                            {
+                                "type": "JSXText",
+                                "value": " prefix ",
+                                "start": 5,
+                                "end": 13
+                            },
+                            {
+                                "type": "JSXSpreadChild",
+                                "expression": {
+                                    "type": "Identifier",
+                                    "name": "children",
+                                    "start": 17,
+                                    "end": 25
+                                },
+                                "start": 14,
+                                "end": 26
+                            },
+                            {
+                                "type": "JSXText",
+                                "value": "suffix",
+                                "start": 27,
+                                "end": 33
+                            },
+                            {
+                                "type": "JSXText",
+                                "value": " ",
+                                "start": 33,
+                                "end": 34
+                            }
+                        ],
+                        "openingElement": {
+                            "type": "JSXOpeningElement",
+                            "name": {
+                                "type": "JSXIdentifier",
+                                "name": "div",
+                                "start": 1,
+                                "end": 4
+                            },
+                            "attributes": [],
+                            "selfClosing": false,
+                            "start": 0,
+                            "end": 5
+                        },
+                        "closingElement": {
+                            "type": "JSXClosingElement",
+                            "name": {
+                                "type": "JSXIdentifier",
+                                "name": "div",
+                                "start": 36,
+                                "end": 39
+                            },
+                            "start": 34,
+                            "end": 40
+                        },
+                        "start": 0,
+                        "end": 40
+                    },
+                    "start": 0,
+                    "end": 40
+                }
+            ],
+            "sourceType": "script",
+            "start": 0,
+            "end": 40
+        });
+    });
+      
+      it('should parse jsx spread attribute', () => {
+        expect(parseScript(`var component = <Component {...props} />;`, {
+            jsx: true,
+            ranges: true,
+        })).to.eql({
+            "type": "Program",
+            "start": 0,
+            "end": 41,
+            "body": [
+              {
+                "type": "VariableDeclaration",
+                "start": 0,
+                "end": 41,
+                "declarations": [
+                  {
+                    "type": "VariableDeclarator",
+                    "start": 4,
+                    "end": 40,
+                    "id": {
+                      "type": "Identifier",
+                      "start": 4,
+                      "end": 13,
+                      "name": "component"
+                    },
+                    "init": {
+                      "type": "JSXElement",
+                      "start": 16,
+                      "end": 40,
+                      "openingElement": {
+                        "type": "JSXOpeningElement",
+                        "start": 16,
+                        "end": 40,
+                        "attributes": [
+                          {
+                            "type": "JSXSpreadAttribute",
+                            "start": 27,
+                            "end": 37,
+                            "argument": {
+                              "type": "Identifier",
+                              "start": 31,
+                              "end": 36,
+                              "name": "props"
+                            }
+                          }
+                        ],
+                        "name": {
+                          "type": "JSXIdentifier",
+                          "start": 17,
+                          "end": 26,
+                          "name": "Component"
+                        },
+                        "selfClosing": true
+                      },
+                      "closingElement": null,
+                      "children": []
+                    }
+                  }
+                ],
+                "kind": "var"
+              }
+            ],
+            "sourceType": "script"
+          });
+    });
       
       it('should parse nested namespace', () => {
         expect(parseScript(`<a:b><a:b></a:b></a:b>;`, {

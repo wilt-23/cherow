@@ -23,7 +23,7 @@ describe('Declarations - Functions', () => {
         }).to.throw();
     });
 
-    it('should fail on "function static() { "use strict"; }"', () => {
+    it('should fail on "function arguments() { "use strict"; }"', () => {
         expect(() => {
             parseModule('function arguments() { "use strict"; }');
         }).to.throw();

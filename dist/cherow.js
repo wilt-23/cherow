@@ -512,7 +512,6 @@ var Parser = function Parser(source, options) {
     this.functionScope = undefined;
     this.blockScope = undefined;
     this.parentScope = undefined;
-    this.tokens = undefined;
     this.comments = undefined;
     if (options.next)
         { this.flags |= 4194304 /* OptionsNext */; }
@@ -526,12 +525,8 @@ var Parser = function Parser(source, options) {
         { this.flags |= 131072 /* OptionsRanges */; }
     if (options.raw)
         { this.flags |= 2097152 /* OptionsRaw */; }
-    if (options.tokens)
-        { this.flags |= 16777216 /* OptionsOnToken */; }
     if (options.v8)
         { this.flags |= 33554432 /* OptionsV8 */; }
-    if (this.flags & 16777216 /* OptionsOnToken */)
-        { this.tokens = options.tokens; }
     if (this.flags & 8388608 /* OptionsOnComment */)
         { this.comments = options.comments; }
 };
@@ -641,31 +636,7 @@ Parser.prototype.rewindState = function rewindState (state) {
 };
 Parser.prototype.nextToken = function nextToken (context) {
     this.token = this.scanToken(context);
-    if (this.flags & 16777216 /* OptionsOnToken */ && this.token !== 0 /* EndOfSource */) {
-        this.collectTokens(this.token);
-    }
     return this.token;
-};
-Parser.prototype.collectTokens = function collectTokens (token) {
-    var value = this.tokenValue;
-    var start = this.startPos;
-    var end = this.index;
-    if (typeof this.tokens === 'function') {
-        this.tokens(tokenDesc(token), value, start, end);
-    }
-    else if (Array.isArray(this.comments)) {
-        var node = {
-            type: tokenDesc(token),
-            value: value,
-            start: this.startPos,
-            end: this.index
-        };
-        if (this.flags & 131072 /* OptionsRanges */) {
-            node.start = start;
-            node.end = end;
-        }
-        this.comments.push(node);
-    }
 };
 Parser.prototype.hasNext = function hasNext () {
     return this.index < this.source.length;
@@ -3506,10 +3477,6 @@ Parser.prototype.parseParenthesizedExpression = function parseParenthesizedExpre
     // Invalid: '(...a)'
     if (this.flags & 8 /* HasRest */)
         { this.throwError(85 /* UnexpectedRestElement */); }
-    // Invalid: 'async ({a = b})'
-    if (context & 2048 /* Await */ && !(this.flags & 4194304 /* OptionsNext */) && !(this.flags & 4 /* InFunctionBody */)) {
-        this.throwError(90 /* InvalidShorthandPropertyAssignment */);
-    }
     this.flags &= ~32768 /* Arrow */;
     if (expr.length > 1) {
         return this.finishNodeAt(sequenceStartPos, sequenceEndPos, {
@@ -3736,15 +3703,12 @@ Parser.prototype.parseAssignmentProperty = function parseAssignmentProperty (con
     }
     else {
         computed = this.token === 131091 /* LeftBracket */;
-        if (context & 2 /* Strict */ && this.isEvalOrArguments(this.tokenValue))
-            { this.error(103 /* UnexpectedReservedWord */); }
         key = this.parseObjectPropertyKey(context);
         this.expect(context, 21 /* Colon */);
-        if (context & 2048 /* Await */ && this.token === 2162797 /* AwaitKeyword */)
-            { this.error(108 /* UnexpectedStrictReserved */); }
         value = this.parseBindingPatternOrIdentifier(context | 4194304 /* Binding */);
-        if (this.parseOptional(context, 524317 /* Assign */))
-            { value = this.parseAssignmentPattern(context, value, pos); }
+        if (this.parseOptional(context, 524317 /* Assign */)) {
+            value = this.parseAssignmentPattern(context, value, pos);
+        }
     }
     return this.finishNode(pos, {
         type: 'Property',
@@ -3818,9 +3782,6 @@ Parser.prototype.reinterpretExpressionAsPattern = function reinterpretExpression
             }
             params.type = 'RestElement';
             this.reinterpretExpressionAsPattern(context, params.argument);
-            return;
-        case 'Property':
-            this.reinterpretExpressionAsPattern(context, params.value);
             return;
         default:
             this.error(1 /* UnexpectedToken */, tokenDesc(this.token));
@@ -3897,9 +3858,6 @@ Parser.prototype.parseArrowFormalParameter = function parseArrowFormalParameter 
                 if (params.elements[i$1] !== null)
                     { this$1.parseArrowFormalParameter(context, params.elements[i$1]); }
             }
-            return;
-        case 'Property':
-            this.parseArrowFormalParameter(context, params.value);
             return;
         case 'ObjectExpression':
             params.type = 'ObjectPattern';
@@ -4215,9 +4173,6 @@ Parser.prototype.parseFunctionExpression = function parseFunctionExpression (con
         // Invalid: '"use strict"; (function package() {})()'
         if (context & 1 /* Module */ && hasMask(this.token, 20480 /* FutureReserved */)) {
             this.error(108 /* UnexpectedStrictReserved */);
-            // Invalid: 'function static() { "use strict"; }'
-            this.errorLocation = this.trackErrorLocation();
-            this.flags |= 64 /* HasReservedWord */;
         }
         name = this.parseIdentifier(context);
     }
@@ -4271,9 +4226,6 @@ Parser.prototype.parseFormalParameterList = function parseFormalParameterList (c
     this.flags &= ~1024 /* ArgumentList */;
     this.expect(context, 16 /* RightParen */);
     return result;
-};
-Parser.prototype.isOnlyStrict = function isOnlyStrict (context) {
-    return context & 2 /* Strict */ && !(context & 1 /* Module */);
 };
 Parser.prototype.parseFormalParameter = function parseFormalParameter (context, flags) {
     var pos = this.getLocations();
@@ -4734,9 +4686,6 @@ Parser.prototype.parseObjectElement = function parseObjectElement (context) {
             break;
         case 2162797 /* AwaitKeyword */:
         case 20586 /* YieldKeyword */:
-            key = this.parseIdentifier(context);
-            break;
-        case 14 /* Ellipsis */:
             key = this.parseIdentifier(context);
             break;
         case 2 /* NumericLiteral */:
